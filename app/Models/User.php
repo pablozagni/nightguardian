@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProjectRole;
 use Database\Factories\UserFactory;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthentication;
 use Filament\Auth\MultiFactor\App\Contracts\HasAppAuthenticationRecovery;
@@ -10,6 +11,7 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -82,5 +84,28 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
     {
         $this->app_authentication_recovery_codes = $codes;
         $this->save();
+    }
+
+    /**
+     * @return BelongsToMany<Project, $this>
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class)->withPivot('role')->withTimestamps();
+    }
+
+    /**
+     * Role of this user in the given project, or null when not a member.
+     */
+    public function roleIn(Project $project): ?ProjectRole
+    {
+        $role = $this->projects()->whereKey($project->getKey())->value('project_user.role');
+
+        return is_string($role) ? ProjectRole::from($role) : null;
+    }
+
+    public function hasRoleAtLeast(Project $project, ProjectRole $role): bool
+    {
+        return $this->is_super_admin || ($this->roleIn($project)?->atLeast($role) ?? false);
     }
 }
