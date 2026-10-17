@@ -10,7 +10,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property string $id
+ * @property string $project_id
+ * @property Level $level
+ * @property IssueStatus $status
+ * @property int $events_count
+ * @property int $users_count
+ * @property array<int, string> $environments
+ * @property Carbon $first_seen_at
+ * @property Carbon $last_seen_at
+ * @property string|null $last_release
+ * @property string|null $first_release
+ * @property Carbon|null $resolved_at
+ * @property int|null $resolved_by
+ * @property string|null $resolved_in_release
+ * @property Carbon|null $ignored_until
+ * @property string|null $merged_into_id
+ */
 class Issue extends Model
 {
     /** @use HasFactory<IssueFactory> */

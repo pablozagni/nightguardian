@@ -4,8 +4,8 @@ Legend: ✅ done · 🚧 in progress · 📋 planned · 🙋 help wanted (great 
 
 ## v0.1 — "First night shift" (MVP)
 
-- 🚧 Ingest API v1 (batch, gzip, token auth, dry-run, idempotent)
-- 🚧 Grouping into issues with smart fingerprints; statuses new / regressed / resolved / ignored
+- ✅ Ingest API v1 (batch, gzip, token auth, dry-run, idempotent)
+- ✅ Grouping into issues with smart fingerprints; statuses new / regressed / resolved / ignored
 - 🚧 Filament panel: projects, tokens, members, triage, issue detail, events, feedback, deploys
 - 🚧 Search by end-user reference code
 - 🚧 Alerts: Telegram + e-mail, min level per channel, rules, cooldowns, daily digest

@@ -16,6 +16,7 @@ use App\Models\IssueFingerprint;
 use App\Models\Project;
 use App\Models\ProjectToken;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -57,7 +58,11 @@ class DemoSeeder extends Seeder
         $api->users()->attach($member, ['role' => ProjectRole::Member->value]);
 
         foreach ([$shop, $api] as $index => $project) {
-            ProjectToken::factory()->for($project)->create(['name' => 'production server']);
+            $plainToken = ProjectToken::generatePlainToken();
+            ProjectToken::factory()->for($project)->create(['name' => 'production server', 'token_hash' => ProjectToken::hash($plainToken)]);
+            if ($this->command instanceof Command) {
+                $this->command->info("Ingest token for {$project->name}: {$plainToken}");
+            }
             AlertChannel::factory()->for($project)->create(['name' => 'On-call e-mail']);
             AlertRule::factory()->for($project)->create();
 

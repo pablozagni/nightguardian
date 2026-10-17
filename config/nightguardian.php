@@ -16,6 +16,14 @@ return [
     ],
 
     /*
+    | Extra denylist keys for the server-side scrubber (case-insensitive substring match), added to the
+    | built-in list of docs/security.md. Example: ['cuit', 'cbu'].
+    */
+    'scrub' => [
+        'extra_keys' => [],
+    ],
+
+    /*
     | Defaults applied to new projects.
     */
     'defaults' => [
