@@ -1,0 +1,43 @@
+{
+  "sent_at": "2026-10-17T13:45:12.345Z",
+  "sdk": { "name": "nightguardian-laravel", "version": "2.0.0" },
+  "events": [
+    {
+      "id": "6f1c1d1e-8a3b-4c55-9b2f-1d2e3f4a5b6c",
+      "type": "exception",
+      "timestamp": "2026-10-17T13:45:11.902Z",
+      "level": "error",
+      "reference": "NG-7F3K-92QD",
+      "environment": "production",
+      "release": "a1b2c3d",
+      "server": "web-01",
+      "platform": "php",
+      "user": { "id": "42" },
+      "tags": { "tenant": "acme" },
+      "runtime": { "name": "php", "version": "8.3.12", "framework": "laravel", "framework_version": "12.4.0", "os": "Linux" },
+      "request": {
+        "method": "POST", "url": "https://app.test/invoices/12", "route": "invoices.update",
+        "status_code": 500, "headers": { "user-agent": "Mozilla/5.0", "accept": "text/html" },
+        "ip": null, "duration_ms": 312
+      },
+      "payload": {
+        "handled": false,
+        "exceptions": [
+          {
+            "class": "Illuminate\\Database\\QueryException",
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'description' cannot be null",
+            "code": "23000",
+            "frames": [
+              {
+                "file": "app/Http/Controllers/InvoiceController.php", "line": 88,
+                "function": "update", "class": "App\\Http\\Controllers\\InvoiceController", "in_app": true,
+                "context": { "pre": ["    $invoice->fill($data);"], "line": "    $invoice->save();", "post": ["    return back();"] }
+              },
+              { "file": "vendor/laravel/framework/src/Illuminate/Database/Connection.php", "line": 825, "function": "runQueryCallback", "class": "Illuminate\\Database\\Connection", "in_app": false }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

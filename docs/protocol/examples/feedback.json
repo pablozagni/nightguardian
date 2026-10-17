@@ -1,0 +1,18 @@
+{
+  "sdk": { "name": "nightguardian-laravel", "version": "2.0.0" },
+  "events": [
+    {
+      "id": "0b9d6f4a-2c1e-4f3a-8d7b-5e6f7a8b9c0d",
+      "type": "feedback",
+      "timestamp": "2026-10-17T13:46:40.000Z",
+      "environment": "production",
+      "platform": "php",
+      "payload": {
+        "event_id": "6f1c1d1e-8a3b-4c55-9b2f-1d2e3f4a5b6c",
+        "reference": "NG-7F3K-92QD",
+        "comment": "Estaba emitiendo una factura B y apreté Guardar.",
+        "email": null
+      }
+    }
+  ]
+}

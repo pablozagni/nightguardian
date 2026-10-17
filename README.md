@@ -1,0 +1,116 @@
+<p align="center">
+  <strong>🌙 NightGuardian</strong><br>
+  <em>Self-hosted error & health monitoring for your applications. It stays awake so you don't have to.</em>
+</p>
+
+<p align="center">
+  <a href="README.es.md">Español</a> ·
+  <a href="docs/architecture.md">Architecture</a> ·
+  <a href="docs/protocol/v1.md">Protocol</a> ·
+  <a href="ROADMAP.md">Roadmap</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+---
+
+## Why NightGuardian?
+
+Your apps break at 3 AM. You find out at 9 AM — from a customer.
+
+Hosted monitoring tools are great, until you add up per-seat pricing, event quotas, data-residency
+questions and a credit card you can never quite cancel. NightGuardian is the other option:
+
+- **Self-hosted, free, MIT.** Your server, your database, your data. No quotas, no seats.
+- **API-first.** The collector speaks a small, documented [HTTP protocol](docs/protocol/v1.md).
+  Laravel is the first SDK; PHP, Node, Python — even Delphi — can follow.
+- **Never breaks your app.** SDKs send *after* the response, with short timeouts, a circuit breaker
+  and an on-disk queue. If the collector is down, your app doesn't notice and nothing is lost.
+- **Quiet by default.** Errors are grouped into issues. You get notified when something is
+  **new**, **regresses**, or **spikes** — not on every occurrence.
+- **Friendly to end users.** Optional error page with a reference code (`NG-7F3K-92QD`) and a
+  "what were you doing?" box, so support can find the exact error in seconds.
+- **Built with Laravel + Filament.** If you know Laravel, you can contribute today.
+
+## What it does (v0.1)
+
+| | |
+|---|---|
+| **Capture** | Exceptions, error logs, failed jobs, failed scheduled tasks, slow requests, slow queries, deploys, user feedback |
+| **Triage** | Grouping by smart fingerprint, statuses *new / regressed / resolved / ignored*, merge issues, search by reference code |
+| **Alerts** | Telegram and e-mail per project, minimum level per channel, "always notify" rules, cooldowns, daily digest |
+| **Access** | Multiple projects, per-project roles (admin / member / viewer), optional 2FA |
+| **Privacy** | Secrets scrubbed in the SDK *and* again in the collector; IPs and request bodies off by default |
+| **Retention** | Configurable per project (default 30 days); issues and counters are kept |
+
+## Quick start
+
+> 🚧 NightGuardian is under active construction. The steps below describe the target v0.1 experience.
+
+**1. Run the collector** (PHP 8.3+, MySQL 8 / MariaDB 10.6+):
+
+```bash
+git clone https://github.com/pablozagni/nightguardian.git
+cd nightguardian
+composer install
+cp .env.example .env
+php artisan nightguardian:install
+```
+
+Or try it in two minutes with Docker: `docker compose up -d`.
+
+**2. Install the SDK in your Laravel app** (Laravel 5.8 → 13):
+
+```bash
+composer require nightguardian/laravel
+```
+
+```dotenv
+NIGHTGUARDIAN_URL=https://nightguardian.example.com
+NIGHTGUARDIAN_TOKEN=   # created in the collector panel
+```
+
+```bash
+php artisan nightguardian:test
+```
+
+That's it. Break something and watch it arrive.
+
+## How it works
+
+```
+ Your app ──(SDK)──► spool on disk ──HTTPS, after response──► Collector API ──► MySQL
+                                                                   │
+                                     Filament panel ◄──────────────┤
+                                     Telegram / e-mail ◄── queue ──┘
+```
+
+Read the full [architecture](docs/architecture.md).
+
+## SDKs
+
+| Platform | Package | Status |
+|---|---|---|
+| Laravel 9 – 13 | [`nightguardian/laravel`](https://github.com/pablozagni/nightguardian-laravel) 2.x | 🚧 in progress |
+| Laravel 5.8 – 8 | [`nightguardian/laravel`](https://github.com/pablozagni/nightguardian-laravel) 1.x | 🚧 in progress |
+| Plain PHP | `nightguardian/php` | 🙋 looking for a maintainer |
+| Node.js | `nightguardian-node` | 🙋 looking for a maintainer |
+| Python | `nightguardian-python` | 🙋 looking for a maintainer |
+
+Want to write one? Start with [docs/sdk-authors.md](docs/sdk-authors.md). The collector has a
+dry-run mode that validates your payloads.
+
+## Contributing
+
+NightGuardian is young, which means **your PR can shape it**. Good places to start:
+
+- Issues labeled [`good first issue`](../../labels/good%20first%20issue)
+- New alert channels (Slack, Discord, Teams, webhooks) — see [docs/alerts.md](docs/alerts.md)
+- Translations (`lang/`)
+- A new SDK
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md). Be kind: [Code of Conduct](CODE_OF_CONDUCT.md).
+Security issues: [SECURITY.md](SECURITY.md).
+
+## License
+
+MIT © Pablo Zagni and contributors. Born at [z.system](https://www.z-system.com.ar), Argentina.
