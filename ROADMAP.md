@@ -10,9 +10,9 @@ Legend: ✅ done · 🚧 in progress · 📋 planned · 🙋 help wanted (great 
 - ✅ Search by end-user reference code
 - ✅ Alerts: Telegram + e-mail, min level per channel, rules, cooldowns, daily digest
 - ✅ Retention pruning
-- 🚧 Installer command + Docker Compose
-- 🚧 Laravel SDK 2.x (Laravel 9–13) and 1.x (Laravel 5.8–8)
-- 🚧 End-user error page with reference code and feedback form
+- ✅ Installer command + Docker Compose + production guide
+- ✅ Laravel SDK 2.x (Laravel 9–13) and 1.x (Laravel 5.8–8)
+- ✅ End-user error page with reference code and feedback form
 
 ## v0.2 — "Better eyes"
 

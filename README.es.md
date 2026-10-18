@@ -60,12 +60,29 @@ Los tokens de bots de Telegram se cargan en el panel (proyecto → *Canales de a
 ```bash
 # Colector (PHP 8.3+, MySQL 8 / MariaDB 10.6+)
 git clone https://github.com/pablozagni/nightguardian.git
-cd nightguardian && composer install && cp .env.example .env
+cd nightguardian
+composer install
+cp .env.example .env            # y completá DB_DATABASE, DB_USERNAME y DB_PASSWORD
+php artisan key:generate
 php artisan nightguardian:install
+```
 
-# En tu app Laravel (5.8 a 13)
+`nightguardian:install` revisa los requisitos, crea las tablas y tu primer super admin. Los avisos, los resúmenes
+y la retención necesitan un worker de cola y el scheduler: [docs/deploy.md](docs/deploy.md) es una guía para copiar y
+pegar por SSH en **Ubuntu 22.04 + Apache + PHP-FPM + MySQL** (HTTPS, worker, cron, actualizaciones y backups).
+Para probarlo antes, con **Docker**:
+
+```bash
+docker compose up -d --build
+docker compose exec app php artisan nightguardian:install --skip-migrate     # y abrí http://localhost:8080
+```
+
+En local, sin worker ni cron: `php artisan queue:work` y `php artisan schedule:work` en dos consolas.
+
+```bash
+# En tu app Laravel (5.8 a 13), con el token que muestra el panel una sola vez
 composer require nightguardian/laravel
-# .env: NIGHTGUARDIAN_URL y NIGHTGUARDIAN_TOKEN (el token se crea en el panel)
+# .env: NIGHTGUARDIAN_URL y NIGHTGUARDIAN_TOKEN
 php artisan nightguardian:test
 ```
 

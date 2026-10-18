@@ -1,0 +1,10 @@
+# Issue labels of the project. Create them once with the GitHub UI, or sync them with any label-sync tool.
+- { name: "good first issue", color: "7057ff", description: "Small and well described: a good start for new contributors" }
+- { name: "help wanted", color: "008672", description: "We would love a hand with this" }
+- { name: "sdk", color: "1d76db", description: "About an SDK or the ingest protocol" }
+- { name: "alerts", color: "d93f0b", description: "Alert channels, rules, digests" }
+- { name: "i18n", color: "fbca04", description: "Translations and localisation" }
+- { name: "bug", color: "ee0701", description: "Something is broken" }
+- { name: "enhancement", color: "a2eeef", description: "A new feature or an improvement" }
+- { name: "docs", color: "0075ca", description: "Documentation" }
+- { name: "security", color: "b60205", description: "Security-related (report vulnerabilities privately, see SECURITY.md)" }

@@ -31,7 +31,7 @@ questions and a credit card you can never quite cancel. NightGuardian is the oth
   "what were you doing?" box, so support can find the exact error in seconds.
 - **Built with Laravel + Filament.** If you know Laravel, you can contribute today.
 
-## What it does (v0.1)
+## What it does (v0.1.0)
 
 | | |
 |---|---|
@@ -79,21 +79,30 @@ Telegram bot tokens are entered in the panel (project → *Alert channels*), sto
 
 ## Quick start
 
-> 🚧 NightGuardian is under active construction. The steps below describe the target v0.1 experience.
-
 **1. Run the collector** (PHP 8.3+, MySQL 8 / MariaDB 10.6+):
 
 ```bash
 git clone https://github.com/pablozagni/nightguardian.git
 cd nightguardian
 composer install
-cp .env.example .env
+cp .env.example .env            # then set DB_DATABASE, DB_USERNAME and DB_PASSWORD
+php artisan key:generate
 php artisan nightguardian:install
 ```
 
-Or try it in two minutes with Docker: `docker compose up -d`.
+`nightguardian:install` checks the requirements, creates the tables and your first super admin. Alerts, digests and
+retention need a queue worker and the scheduler: the command prints the cron line and a systemd unit, and
+[docs/deploy.md](docs/deploy.md) is a copy-paste guide for **Ubuntu 22.04 + Apache + PHP-FPM + MySQL** (HTTPS, worker,
+cron, updates and backups). To try it first, **Docker** is two commands away:
 
-**2. Install the SDK in your Laravel app** (Laravel 5.8 → 13):
+```bash
+docker compose up -d --build
+docker compose exec app php artisan nightguardian:install --skip-migrate     # then open http://localhost:8080
+```
+
+Locally, without a worker or cron: `php artisan queue:work` and `php artisan schedule:work` in two consoles.
+
+**2. Create a project and a token in the panel**, which shows the lines to paste (once). Then, in your Laravel app (5.8 → 13):
 
 ```bash
 composer require nightguardian/laravel
@@ -125,8 +134,8 @@ Read the full [architecture](docs/architecture.md).
 
 | Platform | Package | Status |
 |---|---|---|
-| Laravel 9 – 13 | [`nightguardian/laravel`](https://github.com/pablozagni/nightguardian-laravel) 2.x | 🚧 in progress |
-| Laravel 5.8 – 8 | [`nightguardian/laravel`](https://github.com/pablozagni/nightguardian-laravel) 1.x | 🚧 in progress |
+| Laravel 9 – 13 | [`nightguardian/laravel`](https://github.com/pablozagni/nightguardian-laravel) 2.x | ✅ v2.0.0 |
+| Laravel 5.8 – 8 | [`nightguardian/laravel`](https://github.com/pablozagni/nightguardian-laravel) 1.x | ✅ v1.0.0 |
 | Plain PHP | `nightguardian/php` | 🙋 looking for a maintainer |
 | Node.js | `nightguardian-node` | 🙋 looking for a maintainer |
 | Python | `nightguardian-python` | 🙋 looking for a maintainer |

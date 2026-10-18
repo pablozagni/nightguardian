@@ -1,0 +1,85 @@
+# A complete NightGuardian in two minutes (for trying it out; see docs/deploy.md for production):
+#
+#   docker compose up -d --build
+#   docker compose exec app php artisan nightguardian:install --skip-migrate
+#   open http://localhost:8080
+#
+# Services: app (web, runs the migrations), worker (queue: alerts), scheduler (digests, thresholds, retention), db.
+# Set DB_PASSWORD, APP_URL (the address your applications will use) and, if you like, APP_KEY in a .env file
+# next to this one, or in the environment.
+name: nightguardian
+
+x-app: &app
+  build: .
+  image: nightguardian/collector:local
+  restart: unless-stopped
+  environment: &environment
+    APP_ENV: production
+    APP_DEBUG: "false"
+    APP_URL: ${APP_URL:-http://localhost:8080}
+    APP_KEY: ${APP_KEY:-}
+    DB_CONNECTION: mysql
+    DB_HOST: db
+    DB_PORT: "3306"
+    DB_DATABASE: nightguardian
+    DB_USERNAME: nightguardian
+    DB_PASSWORD: ${DB_PASSWORD:-change-me}
+    QUEUE_CONNECTION: database
+    CACHE_STORE: database
+    SESSION_DRIVER: database
+    LOG_CHANNEL: stderr
+    MAIL_MAILER: ${MAIL_MAILER:-log}
+    MAIL_HOST: ${MAIL_HOST:-}
+    MAIL_PORT: ${MAIL_PORT:-587}
+    MAIL_USERNAME: ${MAIL_USERNAME:-}
+    MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-nightguardian@localhost}
+  volumes:
+    - storage:/var/www/html/storage
+  depends_on:
+    db:
+      condition: service_healthy
+
+services:
+  app:
+    <<: *app
+    ports:
+      - "${PORT:-8080}:80"
+    environment:
+      <<: *environment
+      RUN_MIGRATIONS: "true"
+
+  worker:
+    <<: *app
+    command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
+    depends_on:
+      app:
+        condition: service_healthy
+
+  scheduler:
+    <<: *app
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      app:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: nightguardian
+      MYSQL_USER: nightguardian
+      MYSQL_PASSWORD: ${DB_PASSWORD:-change-me}
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  database:
+  storage:

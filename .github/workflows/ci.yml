@@ -75,3 +75,25 @@ jobs:
       - uses: ramsey/composer-install@v3
       - run: cp .env.example .env && php artisan key:generate
       - run: composer test
+
+  docker:
+    # The image builds and the trial stack (app, worker, scheduler, database) comes up healthy.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose config --quiet
+      - run: docker compose up -d --build --wait --wait-timeout 300
+      - name: The panel answers
+        run: |
+          curl -fsS -o /dev/null -w "login: %{http_code}
+" http://localhost:8080/login
+          curl -fsS -o /dev/null -w "up: %{http_code}
+" http://localhost:8080/up
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8080/api/v1/ingest)" = "401"
+      - name: Worker and scheduler are running
+        run: |
+          docker compose ps --format '{{.Service}} {{.State}}'
+          test "$(docker compose ps --format '{{.Service}} {{.State}}' | grep -c ' running')" -ge 4
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --no-color --tail 80
