@@ -1,0 +1,6 @@
+# GitHub shows a "Sponsor" button when this file lists a funding platform.
+# Nothing is configured yet. To enable it, uncomment the lines you use and replace the example values with yours.
+# Supported keys: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+#
+# github: [your-github-username]            # needs GitHub Sponsors enabled for that account
+# custom: ["https://your-payment-link"]     # for example a Mercado Pago payment link

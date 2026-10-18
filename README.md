@@ -1,10 +1,28 @@
 <p align="center">
-  <strong>🌙 NightGuardian</strong><br>
-  <em>Self-hosted error & health monitoring for your applications. It stays awake so you don't have to.</em>
+  <a href="https://nightguardian.com.ar"><img src="docs/img/panel-issue-dark.png" alt="NightGuardian issue detail: stack trace with the code around the failing line" width="760"></a>
+</p>
+
+<h1 align="center">🌙 NightGuardian</h1>
+
+<p align="center">
+  <em>Self-hosted error &amp; health monitoring for your applications. It stays awake so you don't have to.</em>
 </p>
 
 <p align="center">
+  <a href="https://github.com/pablozagni/nightguardian/actions/workflows/ci.yml"><img src="https://github.com/pablozagni/nightguardian/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/pablozagni/nightguardian/releases"><img src="https://img.shields.io/github/v/tag/pablozagni/nightguardian?label=version&amp;sort=semver" alt="Version"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/pablozagni/nightguardian" alt="License: MIT"></a>
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777bb4" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/Laravel-13-ff2d20" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/Filament-5-f59e0b" alt="Filament 5">
+  <a href="https://packagist.org/packages/nightguardian/laravel"><img src="https://img.shields.io/packagist/v/nightguardian/laravel?label=laravel%20sdk" alt="Laravel SDK"></a>
+</p>
+
+<p align="center">
+  <a href="https://nightguardian.com.ar"><strong>nightguardian.com.ar</strong></a> ·
+  <a href="https://nightguardian.com.ar/try">Try it live</a> ·
   <a href="README.es.md">Español</a> ·
+  <a href="docs/deploy.md">Deploy</a> ·
   <a href="docs/architecture.md">Architecture</a> ·
   <a href="docs/protocol/v1.md">Protocol</a> ·
   <a href="ROADMAP.md">Roadmap</a> ·

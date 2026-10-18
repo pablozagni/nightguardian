@@ -1,8 +1,32 @@
-# 🌙 NightGuardian
+<p align="center">
+  <a href="https://nightguardian.com.ar"><img src="docs/img/panel-issue-dark.png" alt="Detalle de un issue de NightGuardian: stack trace con el código alrededor de la línea que falla" width="760"></a>
+</p>
 
-*Monitoreo de errores y salud de tus aplicaciones, self-hosted. Se queda despierto para que vos no tengas que hacerlo.*
+<h1 align="center">🌙 NightGuardian</h1>
 
-[English](README.md) · [Arquitectura](docs/architecture.md) · [Protocolo](docs/protocol/v1.md) · [Roadmap](ROADMAP.md)
+<p align="center">
+  <em>Monitoreo de errores y salud de tus aplicaciones, self-hosted. Se queda despierto para que vos no tengas que hacerlo.</em>
+</p>
+
+<p align="center">
+  <a href="https://github.com/pablozagni/nightguardian/actions/workflows/ci.yml"><img src="https://github.com/pablozagni/nightguardian/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/pablozagni/nightguardian/releases"><img src="https://img.shields.io/github/v/tag/pablozagni/nightguardian?label=versi%C3%B3n&amp;sort=semver" alt="Versión"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/pablozagni/nightguardian" alt="Licencia: MIT"></a>
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777bb4" alt="PHP 8.3+">
+  <img src="https://img.shields.io/badge/Laravel-13-ff2d20" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/Filament-5-f59e0b" alt="Filament 5">
+  <a href="https://packagist.org/packages/nightguardian/laravel"><img src="https://img.shields.io/packagist/v/nightguardian/laravel?label=sdk%20laravel" alt="SDK de Laravel"></a>
+</p>
+
+<p align="center">
+  <a href="https://nightguardian.com.ar"><strong>nightguardian.com.ar</strong></a> ·
+  <a href="https://nightguardian.com.ar/try">Probalo en vivo</a> ·
+  <a href="README.md">English</a> ·
+  <a href="docs/deploy.md">Despliegue</a> ·
+  <a href="docs/architecture.md">Arquitectura</a> ·
+  <a href="docs/protocol/v1.md">Protocolo</a> ·
+  <a href="ROADMAP.md">Roadmap</a>
+</p>
 
 ## ¿Por qué?
 
