@@ -15,7 +15,10 @@ class SetUserLocale
     {
         $user = $request->user();
 
-        if ($user instanceof User && in_array($user->locale, User::LOCALES, true)) {
+        if ($user instanceof User && DemoMode::isVisitor($user)) {
+            // The shared demo account has no language of its own: follow each visitor's browser.
+            App::setLocale($request->getPreferredLanguage(User::LOCALES) ?? config('app.locale'));
+        } elseif ($user instanceof User && in_array($user->locale, User::LOCALES, true)) {
             App::setLocale($user->locale);
         } elseif (DemoMode::enabled()) {
             // Public demo: visitors have no account language yet, follow the browser.

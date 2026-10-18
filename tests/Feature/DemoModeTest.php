@@ -112,8 +112,15 @@ it('shows the permanent banner in the panel, in English and Spanish', function (
 
     $this->actingAs($visitor)->get('/')->assertOk()->assertSee('Live demo — the data is reset every night');
 
-    $visitor->update(['locale' => 'es']);
-    $this->actingAs($visitor)->get('/')->assertSee('Demo en vivo — los datos se reinician todas las noches');
+    $this->actingAs($visitor)->withHeaders(['Accept-Language' => 'es'])->get('/')->assertSee('Demo en vivo — los datos se reinician todas las noches');
+});
+
+it('shows the panel to the visitor in the language of their browser, whatever the account says', function () {
+    ngDemoOn();
+    $visitor = User::factory()->create(['email' => 'visitor@demo.example.com', 'locale' => 'en']);
+
+    $this->actingAs($visitor)->withHeaders(['Accept-Language' => 'es-AR,es;q=0.9'])->get('/')->assertSee('Demo en vivo — los datos se reinician todas las noches');
+    $this->actingAs($visitor)->withHeaders(['Accept-Language' => 'en-US'])->get('/')->assertSee('Live demo — the data is reset every night');
 });
 
 it('follows the browser language on the demo login page', function () {
