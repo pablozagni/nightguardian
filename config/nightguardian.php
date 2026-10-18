@@ -35,6 +35,21 @@ return [
     ],
 
     /*
+    | Public demo mode (docs/demo-mode.md). Off by default. When on: a read-only visitor account is offered on the login
+    | page, a banner says the data resets every night, the visitor cannot change their password/profile/2FA, the
+    | ingest limit is lower and `nightguardian:demo-reset` is scheduled daily.
+    */
+    'demo' => [
+        'enabled' => (bool) env('NIGHTGUARDIAN_DEMO_MODE', false),
+        'visitor_email' => env('NIGHTGUARDIAN_DEMO_VISITOR_EMAIL', 'visitor@demo.example.com'),
+        'visitor_password' => env('NIGHTGUARDIAN_DEMO_VISITOR_PASSWORD', 'visitor-demo'),
+        'admin_email' => env('NIGHTGUARDIAN_DEMO_ADMIN_EMAIL'),
+        'ingest_token' => env('NIGHTGUARDIAN_DEMO_INGEST_TOKEN'),
+        'ingest_rate_limit_per_minute' => (int) env('NIGHTGUARDIAN_DEMO_RATE_LIMIT', 120),
+        'reset_time' => env('NIGHTGUARDIAN_DEMO_RESET_TIME', '04:00'),
+    ],
+
+    /*
     | Retention: events are deleted in chunks of this size (nightguardian:prune).
     */
     'retention' => ['chunk' => 1000],

@@ -60,12 +60,23 @@ class DemoSeeder extends Seeder
         $member = User::factory()->create(['name' => 'Demo Member', 'email' => 'member@example.com', 'locale' => 'es']);
         $viewer = User::factory()->create(['name' => 'Demo Viewer', 'email' => 'viewer@example.com']);
 
-        $shop = Project::factory()->create(['name' => 'Demo Shop', 'slug' => 'demo-shop']);
-        $api = Project::factory()->create(['name' => 'Demo API', 'slug' => 'demo-api', 'platform' => 'php']);
+        [$shop, $api] = $this->seedProjects($owner);
 
         $shop->users()->attach($member, ['role' => ProjectRole::Admin->value]);
         $shop->users()->attach($viewer, ['role' => ProjectRole::Viewer->value]);
         $api->users()->attach($member, ['role' => ProjectRole::Member->value]);
+    }
+
+    /**
+     * Demo Shop and Demo API with tokens, issues, events, feedback, deploys and (optionally) an alert channel and rule.
+     * Also used by the public demo reset, which has no well-known users and no alert channels.
+     *
+     * @return array{0: Project, 1: Project}
+     */
+    public function seedProjects(User $resolver, bool $withAlerts = true): array
+    {
+        $shop = Project::factory()->create(['name' => 'Demo Shop', 'slug' => 'demo-shop']);
+        $api = Project::factory()->create(['name' => 'Demo API', 'slug' => 'demo-api', 'platform' => 'php']);
 
         foreach ([$shop, $api] as $index => $project) {
             $plainToken = ProjectToken::generatePlainToken();
@@ -73,13 +84,17 @@ class DemoSeeder extends Seeder
             if ($this->command instanceof Command) {
                 $this->command->info("Ingest token for {$project->name}: {$plainToken}");
             }
-            AlertChannel::factory()->for($project)->create(['name' => 'On-call e-mail']);
-            AlertRule::factory()->for($project)->create();
+            if ($withAlerts) {
+                AlertChannel::factory()->for($project)->create(['name' => 'On-call e-mail']);
+                AlertRule::factory()->for($project)->create();
+            }
 
-            $this->seedIssues($project, $index === 0 ? array_slice(self::ISSUES, 0, 8) : array_slice(self::ISSUES, 8), $owner);
+            $this->seedIssues($project, $index === 0 ? array_slice(self::ISSUES, 0, 8) : array_slice(self::ISSUES, 8), $resolver);
 
             Deploy::factory()->for($project)->count(3)->create();
         }
+
+        return [$shop, $api];
     }
 
     /**

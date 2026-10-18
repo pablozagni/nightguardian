@@ -12,3 +12,10 @@ Artisan::command('inspire', function () {
 Schedule::command('nightguardian:digest')->everyMinute()->withoutOverlapping();
 Schedule::command('nightguardian:thresholds')->everyMinute()->withoutOverlapping();
 Schedule::command('nightguardian:prune')->dailyAt('03:30')->withoutOverlapping();
+
+// Public demo instance only (docs/demo-mode.md): wipe and rebuild every night.
+if (config('nightguardian.demo.enabled')) {
+    Schedule::command('nightguardian:demo-reset')
+        ->dailyAt((string) config('nightguardian.demo.reset_time', '04:00'))
+        ->withoutOverlapping();
+}

@@ -262,4 +262,14 @@ return [
         'copy' => 'Copiar',
         'copied' => 'Copiado ✓',
     ],
+
+    'demo' => [
+        'banner' => 'Demo en vivo — los datos se reinician todas las noches',
+        'enter' => 'Entrar a la demo',
+        'unavailable' => 'La cuenta de la demo no está disponible en este momento. Probá de nuevo en un minuto.',
+        'login_title' => 'Esto es una demo en vivo',
+        'login_help' => 'Podés recorrerla con una cuenta de solo lectura: apretá "Entrar a la demo", o iniciá sesión con estas credenciales. Los datos se reinician todas las noches.',
+        'email' => 'E-mail',
+        'password' => 'Contraseña',
+    ],
 ];

@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+### Added
+- **Public demo mode** (`NIGHTGUARDIAN_DEMO_MODE=true`, off by default, see `docs/demo-mode.md`): a read-only visitor account with its
+  credentials and an "Enter the demo" button on the login page, a permanent "Live demo" banner (English/Spanish, login page
+  language follows the browser), no profile/password/two-factor changes for the visitor, a lower ingest limit
+  (`NIGHTGUARDIAN_DEMO_RATE_LIMIT`, 120 events per minute per project) and the `nightguardian:demo-reset` command, scheduled
+  daily at 04:00, that wipes everything except the configured administrator and rebuilds realistic data plus the "Demo app"
+  project with the token from `NIGHTGUARDIAN_DEMO_INGEST_TOKEN`.
+
 ## [0.1.0] - 2026-10-18
 
 First release: ingest API v1, grouping, panel, alerts, digest, retention, Docker and a production guide.

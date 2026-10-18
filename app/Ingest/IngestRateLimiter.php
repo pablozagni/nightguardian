@@ -2,6 +2,7 @@
 
 namespace App\Ingest;
 
+use App\Demo\DemoMode;
 use App\Models\Project;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
@@ -22,13 +23,27 @@ class IngestRateLimiter
         Cache::add($key, 0, 120);
         $count = (int) Cache::increment($key, $events);
 
-        if ($count > $project->rate_limit_per_minute) {
+        if ($count > $this->limitFor($project)) {
             Cache::decrement($key, $events);
 
             return (($window + 1) * 60) - time();
         }
 
         return null;
+    }
+
+    /**
+     * Events per minute allowed for the project. In public demo mode nobody gets more than the (lower) demo limit.
+     */
+    private function limitFor(Project $project): int
+    {
+        $limit = (int) $project->rate_limit_per_minute;
+
+        if (DemoMode::enabled()) {
+            $limit = min($limit, max(1, (int) config('nightguardian.demo.ingest_rate_limit_per_minute', 120)));
+        }
+
+        return $limit;
     }
 
     public function tooManyBadTokens(string $ip): ?int

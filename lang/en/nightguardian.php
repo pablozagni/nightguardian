@@ -262,4 +262,14 @@ return [
         'copy' => 'Copy',
         'copied' => 'Copied ✓',
     ],
+
+    'demo' => [
+        'banner' => 'Live demo — the data is reset every night',
+        'enter' => 'Enter the demo',
+        'unavailable' => 'The demo account is not available right now. Try again in a minute.',
+        'login_title' => 'This is a live demo',
+        'login_help' => 'You can look around with a read-only account: just press "Enter the demo", or sign in with these credentials. The data is reset every night.',
+        'email' => 'E-mail',
+        'password' => 'Password',
+    ],
 ];
