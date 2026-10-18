@@ -2,10 +2,13 @@
 
 namespace App\Enums;
 
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
 /**
  * PSR-3 levels, ordered from least to most severe.
  */
-enum Level: string
+enum Level: string implements HasColor, HasLabel
 {
     case Debug = 'debug';
     case Info = 'info';
@@ -33,5 +36,20 @@ enum Level: string
     public function atLeast(self $level): bool
     {
         return $this->severity() >= $level->severity();
+    }
+
+    public function getLabel(): string
+    {
+        return __('nightguardian.levels.'.$this->value);
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::Debug, self::Info => 'gray',
+            self::Notice => 'info',
+            self::Warning => 'warning',
+            self::Error, self::Critical, self::Alert, self::Emergency => 'danger',
+        };
     }
 }

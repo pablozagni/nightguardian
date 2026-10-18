@@ -12,12 +12,14 @@ use App\Models\Deploy;
 use App\Models\Event;
 use App\Models\Feedback;
 use App\Models\Issue;
+use App\Models\IssueActivity;
 use App\Models\IssueFingerprint;
 use App\Models\Project;
 use App\Models\ProjectToken;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -42,6 +44,14 @@ class DemoSeeder extends Seeder
         ['InvalidArgumentException', 'Unsupported currency code "XXX"', Level::Warning, IssueStatus::New],
         ['Illuminate\\Http\\Exceptions\\ThrottleRequestsException', 'Too Many Attempts.', Level::Notice, IssueStatus::Ignored],
         ['OutOfBoundsException', 'Page 0 is out of bounds', Level::Warning, IssueStatus::New],
+    ];
+
+    /** @var list<string> */
+    private const COMMENTS = [
+        'I was paying invoice B 0001-00001234 and clicked Confirm twice.',
+        'Estaba cargando un pedido nuevo y al guardar me apareció este error.',
+        'Tried to export the monthly report and the page just stopped.',
+        'I only changed my shipping address and pressed Save.',
     ];
 
     public function run(): void
@@ -90,11 +100,36 @@ class DemoSeeder extends Seeder
 
             IssueFingerprint::factory()->for($issue)->create(['project_id' => $project->id]);
 
-            $events = Event::factory()->for($project)->for($issue)->count(rand(2, 6))->create([
-                'type' => EventType::Exception,
-                'level' => $level,
-                'message' => Str::limit($message, 1000),
-            ]);
+            $count = rand(3, 24);
+            $events = collect(range(1, $count))->map(function (int $i) use ($project, $issue, $class, $message, $level) {
+                $occurred = now()->subMinutes(rand(5, 60 * 24 * 7));
+                $uuid = (string) Str::uuid();
+
+                return Event::factory()->for($project)->for($issue)->create([
+                    'uuid' => $uuid,
+                    'type' => EventType::Exception,
+                    'level' => $level,
+                    'message' => Str::limit($message, 1000),
+                    'occurred_at' => $occurred,
+                    'received_at' => $occurred,
+                    'payload' => $this->payload($uuid, $class, $message, $level, $occurred),
+                ]);
+            });
+
+            $issue->update(['first_seen_at' => $events->min('occurred_at'), 'last_seen_at' => $events->max('occurred_at')]);
+
+            if ($status === IssueStatus::Resolved) {
+                IssueActivity::create(['issue_id' => $issue->id, 'user_id' => $resolver->id, 'action' => IssueActivity::RESOLVED, 'created_at' => now()->subDay()]);
+            }
+
+            if ($status === IssueStatus::Ignored) {
+                IssueActivity::create(['issue_id' => $issue->id, 'user_id' => $resolver->id, 'action' => IssueActivity::IGNORED, 'meta' => ['until' => null], 'created_at' => now()->subHours(6)]);
+            }
+
+            if ($status === IssueStatus::Regressed) {
+                IssueActivity::create(['issue_id' => $issue->id, 'user_id' => $resolver->id, 'action' => IssueActivity::RESOLVED, 'created_at' => now()->subDays(3)]);
+                IssueActivity::create(['issue_id' => $issue->id, 'action' => IssueActivity::REGRESSED, 'meta' => ['release' => '1.4.2'], 'created_at' => now()->subHours(9)]);
+            }
 
             $issue->update([
                 'events_count' => $events->count(),
@@ -102,11 +137,49 @@ class DemoSeeder extends Seeder
             ]);
 
             if ($status === IssueStatus::New) {
+                $event = $events->sortByDesc('occurred_at')->first();
                 Feedback::factory()->for($project)->for($issue)->create([
-                    'event_uuid' => $events->first()->uuid,
-                    'reference' => $events->first()->reference,
+                    'event_uuid' => $event->uuid,
+                    'reference' => $event->reference,
+                    'comment' => collect(self::COMMENTS)->random(),
+                    'email' => null,
+                    'created_at' => $event->occurred_at->copy()->addMinutes(2),
                 ]);
             }
         }
+    }
+
+    /**
+     * A protocol v1 exception event with a realistic stack trace (most recent frame first).
+     *
+     * @return array<string, mixed>
+     */
+    private function payload(string $uuid, string $class, string $message, Level $level, Carbon $occurred): array
+    {
+        return [
+            'id' => $uuid,
+            'type' => 'exception',
+            'timestamp' => $occurred->toIso8601String(),
+            'level' => $level->value,
+            'environment' => 'production',
+            'release' => '1.4.2',
+            'platform' => 'php',
+            'user' => ['id' => (string) rand(1, 500)],
+            'request' => ['method' => 'POST', 'url' => 'https://shop.example.com/invoices/42', 'route' => 'invoices.update', 'status_code' => 500, 'headers' => ['user-agent' => 'Mozilla/5.0', 'accept' => 'text/html']],
+            'tags' => ['tenant' => 'acme', 'plan' => 'pro'],
+            'payload' => ['handled' => false, 'exceptions' => [[
+                'class' => $class,
+                'message' => $message,
+                'frames' => [
+                    ['file' => 'app/Services/InvoiceService.php', 'line' => 88, 'function' => 'issue', 'class' => 'App\Services\InvoiceService', 'in_app' => true,
+                        'context' => ['pre' => ['    {', '        $invoice = $this->build($order);'], 'line' => '        $invoice->save();', 'post' => ['', '        return $invoice;']]],
+                    ['file' => 'vendor/laravel/framework/src/Illuminate/Database/Eloquent/Model.php', 'line' => 1174, 'function' => 'save', 'class' => 'Illuminate\Database\Eloquent\Model', 'in_app' => false],
+                    ['file' => 'vendor/laravel/framework/src/Illuminate/Database/Connection.php', 'line' => 825, 'function' => 'runQueryCallback', 'class' => 'Illuminate\Database\Connection', 'in_app' => false],
+                    ['file' => 'app/Http/Controllers/InvoiceController.php', 'line' => 52, 'function' => 'update', 'class' => 'App\Http\Controllers\InvoiceController', 'in_app' => true,
+                        'context' => ['pre' => ['    {', '        $this->authorize(\'update\', $invoice);'], 'line' => '        $this->invoices->issue($invoice->order);', 'post' => ['', '        return redirect()->route(\'invoices.show\', $invoice);']]],
+                    ['file' => 'vendor/laravel/framework/src/Illuminate/Routing/ControllerDispatcher.php', 'line' => 46, 'function' => 'dispatch', 'class' => 'Illuminate\Routing\ControllerDispatcher', 'in_app' => false],
+                ],
+            ]]],
+        ];
     }
 }

@@ -20,6 +20,29 @@ NightGuardian es la alternativa:
   contar qué estaba haciendo.
 - **Laravel + Filament.** Si sabés Laravel, podés colaborar hoy.
 
+## El panel
+
+| Dashboard | Triage |
+|---|---|
+| ![Dashboard con una tarjeta por proyecto](docs/img/panel-dashboard.png) | ![Lista de triage con filtros y acciones masivas](docs/img/panel-triage.png) |
+
+| Detalle de un issue | Comentarios de usuarios |
+|---|---|
+| ![Detalle con stack trace y contexto de código](docs/img/panel-issue.png) | ![Pestaña de comentarios con lo que hacía el usuario](docs/img/panel-issue-feedback.png) |
+
+| Tokens (se muestran una vez, con el bloque de instalación) | Modo oscuro |
+|---|---|
+| ![Token nuevo con el bloque .env y el comando composer](docs/img/panel-tokens.png) | ![Detalle en modo oscuro](docs/img/panel-issue-dark.png) |
+
+![Búsqueda global por código de referencia](docs/img/panel-search.png)
+
+- **Dashboard:** una tarjeta por proyecto (issues abiertos, nuevos hoy, eventos en 24 h, gráfico de 7 días).
+- **Triage:** filtros por proyecto, estado, entorno, tipo, nivel y release; orden por último visto o eventos; resolver o ignorar en masa.
+- **Detalle del issue:** último evento con el stack trace (frames de la app resaltados, contexto de código), petición, usuario, etiquetas y contexto; pestañas de eventos, **comentarios** y actividad; acciones para resolver, resolver en un release, ignorar (1 h / 24 h / siempre), reabrir y fusionar.
+- **Búsqueda:** el buscador encuentra un evento por el código de referencia que te da un usuario (`NG-7F3K-92QD`, en mayúsculas o minúsculas, con o sin guiones) y los issues por título.
+- **Tokens:** al crear un token se muestra **una sola vez**, con las dos líneas para el `.env` de la app y `composer require nightguardian/laravel`; solo se guarda su hash.
+- **Acceso:** enlaces de invitación (firmados, 7 días, un solo uso) para proyectos y para la instancia; los super admins gestionan usuarios.
+
 ## Inicio rápido
 
 ```bash

@@ -2,7 +2,10 @@
 
 namespace App\Enums;
 
-enum ProjectRole: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ProjectRole: string implements HasColor, HasLabel
 {
     case Admin = 'admin';
     case Member = 'member';
@@ -23,5 +26,19 @@ enum ProjectRole: string
     public function atLeast(self $role): bool
     {
         return $this->rank() >= $role->rank();
+    }
+
+    public function getLabel(): string
+    {
+        return __('nightguardian.roles.'.$this->value);
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::Admin => 'danger',
+            self::Member => 'primary',
+            self::Viewer => 'gray',
+        };
     }
 }

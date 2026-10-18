@@ -7,6 +7,7 @@ use App\Enums\Level;
 use App\Ingest\Types\EventTypeHandler;
 use App\Models\Event;
 use App\Models\Issue;
+use App\Models\IssueActivity;
 use App\Models\IssueFingerprint;
 use App\Models\Project;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -159,6 +160,14 @@ class IssueUpdater
 
         $transition = $this->transition($issue, $release);
         $issue->save();
+
+        if ($transition === IssueUpdate::REGRESSED) {
+            IssueActivity::create([
+                'issue_id' => $issue->getKey(),
+                'action' => IssueActivity::REGRESSED,
+                'meta' => $release === null ? null : ['release' => $release],
+            ]);
+        }
 
         return $transition;
     }

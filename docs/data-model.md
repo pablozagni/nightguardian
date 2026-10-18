@@ -90,6 +90,11 @@ Pruned by `occurred_at < now() - retention_days` in chunks of 1,000.
 ### `feedback`
 `id`, `project_id`, `issue_id` null, `event_uuid` null, `reference` null, `comment` text, `email` null, `created_at`.
 
+### `issue_activities`
+`id`, `issue_id`, `user_id` null (null = the system, e.g. an automatic regression), `action`
+(`resolved`, `resolved_in_release`, `ignored`, `reopened`, `regressed`, `merged`), `meta` json null, `created_at`.
+Shown in the *Activity* tab of an issue.
+
 ### `deploys`
 `id`, `project_id`, `environment`, `release`, `commit` null, `branch` null, `deployer` null, `url` null, `deployed_at`.
 

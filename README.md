@@ -42,6 +42,29 @@ questions and a credit card you can never quite cancel. NightGuardian is the oth
 | **Privacy** | Secrets scrubbed in the SDK *and* again in the collector; IPs and request bodies off by default |
 | **Retention** | Configurable per project (default 30 days); issues and counters are kept |
 
+## The panel
+
+| Dashboard | Triage |
+|---|---|
+| ![Dashboard with a card per project](docs/img/panel-dashboard.png) | ![Triage list with filters and bulk actions](docs/img/panel-triage.png) |
+
+| Issue detail | Feedback from users |
+|---|---|
+| ![Issue detail with stack trace and code context](docs/img/panel-issue.png) | ![Feedback tab with what the user was doing](docs/img/panel-issue-feedback.png) |
+
+| Tokens (shown once, with the install snippet) | Dark mode |
+|---|---|
+| ![New token with the .env block and composer command](docs/img/panel-tokens.png) | ![Issue detail in dark mode](docs/img/panel-issue-dark.png) |
+
+![Global search by reference code](docs/img/panel-search.png)
+
+- **Dashboard:** a card per project (open issues, new today, events in 24 h, 7-day chart).
+- **Triage:** filter by project, status, environment, type, level and release; sort by last seen or events; resolve or ignore in bulk.
+- **Issue detail:** latest event with the stack trace (in-app frames highlighted, code context), request, user, tags and context; tabs for events, **feedback** and activity; actions to resolve, resolve in a release, ignore (1 h / 24 h / forever), reopen and merge.
+- **Search:** the search box finds an event by the reference code a user gives you (`NG-7F3K-92QD`, in any case, with or without dashes) and issues by title.
+- **Tokens:** creating a token shows it **once**, with the two lines to paste in the app's `.env` and `composer require nightguardian/laravel`; only its hash is stored.
+- **Access:** invitation links (signed, 7 days, one use) for projects and for the instance; super admins manage users.
+
 ## Quick start
 
 > 🚧 NightGuardian is under active construction. The steps below describe the target v0.1 experience.

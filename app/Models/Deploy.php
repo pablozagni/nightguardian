@@ -2,15 +2,20 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\VisibleToUser;
 use Database\Factories\DeployFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $deployed_at
+ */
 class Deploy extends Model
 {
     /** @use HasFactory<DeployFactory> */
-    use HasFactory;
+    use HasFactory, VisibleToUser;
 
     public $timestamps = false;
 

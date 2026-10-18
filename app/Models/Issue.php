@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\IssueStatus;
 use App\Enums\Level;
+use App\Models\Concerns\VisibleToUser;
 use Database\Factories\IssueFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,8 @@ use Illuminate\Support\Carbon;
 /**
  * @property string $id
  * @property string $project_id
+ * @property string $title
+ * @property string|null $culprit
  * @property Level $level
  * @property IssueStatus $status
  * @property int $events_count
@@ -33,7 +36,7 @@ use Illuminate\Support\Carbon;
 class Issue extends Model
 {
     /** @use HasFactory<IssueFactory> */
-    use HasFactory, HasUlids;
+    use HasFactory, HasUlids, VisibleToUser;
 
     protected $guarded = [];
 
@@ -107,6 +110,14 @@ class Issue extends Model
     public function feedback(): HasMany
     {
         return $this->hasMany(Feedback::class);
+    }
+
+    /**
+     * @return HasMany<IssueActivity, $this>
+     */
+    public function activities(): HasMany
+    {
+        return $this->hasMany(IssueActivity::class);
     }
 
     /**

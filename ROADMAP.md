@@ -6,8 +6,8 @@ Legend: ✅ done · 🚧 in progress · 📋 planned · 🙋 help wanted (great 
 
 - ✅ Ingest API v1 (batch, gzip, token auth, dry-run, idempotent)
 - ✅ Grouping into issues with smart fingerprints; statuses new / regressed / resolved / ignored
-- 🚧 Filament panel: projects, tokens, members, triage, issue detail, events, feedback, deploys
-- 🚧 Search by end-user reference code
+- ✅ Filament panel: dashboard, projects, tokens, members and invitations, triage, issue detail, events, feedback, deploys, users
+- ✅ Search by end-user reference code
 - 🚧 Alerts: Telegram + e-mail, min level per channel, rules, cooldowns, daily digest
 - 🚧 Retention pruning
 - 🚧 Installer command + Docker Compose

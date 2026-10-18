@@ -2,7 +2,9 @@
 
 use App\Models\Project;
 use App\Models\ProjectToken;
+use App\Models\User;
 use Illuminate\Testing\TestResponse;
+use Livewire\Features\SupportTesting\Testable;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit');
@@ -76,4 +78,40 @@ function ngPost(string $token, array|string $body, array $headers = [], bool $gz
     }
 
     return test()->call('POST', '/api/v1/ingest', [], [], [], $server, $raw);
+}
+
+/**
+ * A project with one user per role plus an outsider (a member of another project) and a super admin.
+ *
+ * @return array{project: Project, other: Project, admin: User, member: User, viewer: User, outsider: User, super: User}
+ */
+function ngTeam(): array
+{
+    $project = Project::factory()->create(['name' => 'Shop']);
+    $other = Project::factory()->create(['name' => 'Other']);
+
+    $admin = User::factory()->create();
+    $member = User::factory()->create();
+    $viewer = User::factory()->create();
+    $outsider = User::factory()->create();
+
+    $project->users()->attach($admin, ['role' => 'admin']);
+    $project->users()->attach($member, ['role' => 'member']);
+    $project->users()->attach($viewer, ['role' => 'viewer']);
+    $other->users()->attach($outsider, ['role' => 'admin']);
+
+    return [
+        'project' => $project,
+        'other' => $other,
+        'admin' => $admin,
+        'member' => $member,
+        'viewer' => $viewer,
+        'outsider' => $outsider,
+        'super' => User::factory()->superAdmin()->create(),
+    ];
+}
+
+function livewire(string $component, array $parameters = []): Testable
+{
+    return Livewire\Livewire::test($component, $parameters);
 }

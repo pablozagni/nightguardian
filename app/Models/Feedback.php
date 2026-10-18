@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\VisibleToUser;
 use Database\Factories\FeedbackFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Feedback extends Model
 {
     /** @use HasFactory<FeedbackFactory> */
-    use HasFactory;
+    use HasFactory, VisibleToUser;
 
     public const UPDATED_AT = null;
 

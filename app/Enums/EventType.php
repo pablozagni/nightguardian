@@ -2,7 +2,10 @@
 
 namespace App\Enums;
 
-enum EventType: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum EventType: string implements HasColor, HasLabel
 {
     case Exception = 'exception';
     case Log = 'log';
@@ -13,4 +16,19 @@ enum EventType: string
     case Deploy = 'deploy';
     case Feedback = 'feedback';
     case Test = 'test';
+
+    public function getLabel(): string
+    {
+        return __('nightguardian.event_types.'.$this->value);
+    }
+
+    public function getColor(): string
+    {
+        return match ($this) {
+            self::Exception, self::JobFailed, self::ScheduleFailed => 'danger',
+            self::Log, self::SlowRequest, self::SlowQuery => 'warning',
+            self::Deploy, self::Test => 'info',
+            self::Feedback => 'success',
+        };
+    }
 }

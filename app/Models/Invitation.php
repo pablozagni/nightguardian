@@ -7,7 +7,16 @@ use Database\Factories\InvitationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property string|null $project_id
+ * @property ProjectRole|null $role
+ * @property bool $is_super_admin
+ * @property string|null $email
+ * @property Carbon $expires_at
+ * @property Carbon|null $accepted_at
+ */
 class Invitation extends Model
 {
     /** @use HasFactory<InvitationFactory> */

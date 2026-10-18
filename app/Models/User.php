@@ -104,6 +104,23 @@ class User extends Authenticatable implements FilamentUser, HasAppAuthentication
         return is_string($role) ? ProjectRole::from($role) : null;
     }
 
+    /**
+     * Ids of the projects this user can see, or null for "all of them" (super admins).
+     *
+     * @return list<string>|null
+     */
+    public function visibleProjectIds(): ?array
+    {
+        if ($this->is_super_admin) {
+            return null;
+        }
+
+        /** @var list<string> $ids */
+        $ids = $this->projects()->pluck('projects.id')->all();
+
+        return $ids;
+    }
+
     public function hasRoleAtLeast(Project $project, ProjectRole $role): bool
     {
         return $this->is_super_admin || ($this->roleIn($project)?->atLeast($role) ?? false);
