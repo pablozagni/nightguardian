@@ -93,13 +93,17 @@ class InstallCommand extends Command
     private function printNextSteps(): void
     {
         $path = base_path();
+        // The binary running this command, not whatever "php" resolves to: servers often have several PHP versions.
+        $php = PHP_BINARY;
+        $cronPath = escapeshellarg($path);
+        $cronPhp = escapeshellarg($php);
 
         $this->newLine();
         $this->line('<options=bold>1. Scheduler</> — add this line to the crontab:');
-        $this->line("   * * * * * cd {$path} && php artisan schedule:run >> /dev/null 2>&1");
+        $this->line("   * * * * * cd {$cronPath} && {$cronPhp} artisan schedule:run >> /dev/null 2>&1");
         $this->newLine();
         $this->line('<options=bold>2. Queue worker</> — run it under a process manager:');
-        $this->line('   php artisan queue:work --tries=3 --max-time=3600');
+        $this->line("   {$cronPhp} {$cronPath}/artisan queue:work --tries=3 --max-time=3600");
         $this->newLine();
         $this->line('   Example systemd unit (/etc/systemd/system/nightguardian-worker.service):');
         $this->line('   [Unit]');
@@ -109,7 +113,7 @@ class InstallCommand extends Command
         $this->line('   User=www-data');
         $this->line('   Restart=always');
         $this->line("   WorkingDirectory={$path}");
-        $this->line('   ExecStart=/usr/bin/php artisan queue:work --tries=3 --max-time=3600');
+        $this->line("   ExecStart={$php} {$path}/artisan queue:work --tries=3 --max-time=3600");
         $this->line('   [Install]');
         $this->line('   WantedBy=multi-user.target');
     }

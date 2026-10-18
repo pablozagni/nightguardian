@@ -283,3 +283,12 @@ it('honours a lower demo limit from the configuration', function () {
     ngPost($token, ['events' => array_map(fn () => ngEvent(['id' => fake()->uuid()]), range(1, 5))])->assertStatus(202);
     ngPost($token, ['events' => [ngEvent()]])->assertStatus(429);
 });
+
+it('seeds the demo without factories, because Faker is a dev dependency and demo-reset runs on production installs', function () {
+    // The local-only parts (well-known users, alert channel and rule) may use factories; the reset path may not.
+    foreach (['app/Demo/DemoReset.php', 'database/seeders/DemoSeeder.php'] as $file) {
+        $source = (string) file_get_contents(base_path($file));
+
+        expect($source)->not->toMatch('/(Project|ProjectToken|Issue|IssueFingerprint|Event|Deploy|Feedback)::factory\(/')->not->toContain('fake(');
+    }
+});

@@ -76,6 +76,50 @@ jobs:
       - run: cp .env.example .env && php artisan key:generate
       - run: composer test
 
+  production-install:
+    # Regression guard: composer install --no-dev must be enough to run the demo reset (Faker is a dev dependency).
+    runs-on: ubuntu-latest
+    services:
+      database:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: secret
+          MYSQL_DATABASE: nightguardian_prod
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -psecret"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      APP_ENV: production
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: nightguardian_prod
+      DB_USERNAME: root
+      DB_PASSWORD: secret
+      NIGHTGUARDIAN_DEMO_MODE: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, curl, mbstring, zlib
+          coverage: none
+      - run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan migrate --force
+      - name: Faker is really absent
+        run: test ! -d vendor/fakerphp
+      - run: php artisan nightguardian:demo-reset
+      - name: The reset left data behind
+        run: |
+          count=$(mysql -h 127.0.0.1 -uroot -psecret -N -e "SELECT COUNT(*) FROM nightguardian_prod.issues")
+          echo "issues: $count"
+          test "$count" -gt 0
+
   docker:
     # The image builds and the trial stack (app, worker, scheduler, database) comes up healthy.
     runs-on: ubuntu-latest

@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-18
+
 ### Added
 - **Public demo mode** (`NIGHTGUARDIAN_DEMO_MODE=true`, off by default, see `docs/demo-mode.md`): a read-only visitor account with its
   credentials and an "Enter the demo" button on the login page, a permanent "Live demo" banner (English/Spanish, login page
@@ -12,6 +14,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
   (`NIGHTGUARDIAN_DEMO_RATE_LIMIT`, 120 events per minute per project) and the `nightguardian:demo-reset` command, scheduled
   daily at 04:00, that wipes everything except the configured administrator and rebuilds realistic data plus the "Demo app"
   project with the token from `NIGHTGUARDIAN_DEMO_INGEST_TOKEN`.
+
+### Fixed
+- `nightguardian:demo-reset` failed on production installs (`composer install --no-dev`) with `Call to undefined function Database\Factoriesake()`:
+  the demo data came from Eloquent factories, which need Faker, a development dependency. The demo seeding now creates its
+  models directly with realistic hand-written data, so Faker stays a dev dependency. Regression tests added, plus a CI job
+  (`production-install`) that runs `composer install --no-dev` and `nightguardian:demo-reset` against MySQL.
+- `nightguardian:install` printed the cron and systemd examples with a bare `php` and `/usr/bin/php`; they now use the PHP binary
+  that runs the command and the real project path, which matters on servers with several PHP versions.
+- `docs/deploy.md` and `docs/demo-mode.md` call `php8.3` (and Composer through it) explicitly instead of the default `php`.
 
 ## [0.1.0] - 2026-10-18
 

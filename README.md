@@ -49,7 +49,7 @@ questions and a credit card you can never quite cancel. NightGuardian is the oth
   "what were you doing?" box, so support can find the exact error in seconds.
 - **Built with Laravel + Filament.** If you know Laravel, you can contribute today.
 
-## What it does (v0.1.0)
+## What it does (v0.1.1)
 
 | | |
 |---|---|

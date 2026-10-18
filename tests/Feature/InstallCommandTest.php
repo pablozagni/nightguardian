@@ -37,3 +37,15 @@ it('rejects a duplicated e-mail', function () {
         '--password' => 'correct-horse-battery',
     ])->assertFailed();
 });
+
+it('prints cron and systemd lines with the PHP binary and project path that run the command', function () {
+    $this->artisan('nightguardian:install', [
+        '--name' => 'Ada',
+        '--email' => 'ada@example.com',
+        '--password' => 'correct-horse-battery',
+        '--skip-migrate' => true,
+    ])
+        ->expectsOutputToContain('ExecStart='.PHP_BINARY.' '.base_path().'/artisan queue:work')
+        ->expectsOutputToContain(escapeshellarg(PHP_BINARY).' artisan schedule:run')
+        ->assertSuccessful();
+});

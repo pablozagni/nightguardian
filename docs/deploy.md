@@ -34,6 +34,8 @@ echo "Admin password: $NG_ADMIN_PASSWORD"         # write it down now
 ## 2. Packages
 
 PHP 8.3 comes from the well-known `ppa:ondrej/php` repository (Ubuntu 22.04 ships PHP 8.1).
+That PPA installs side by side with the default PHP, so plain `php` may still be 8.1: every command in this guide calls
+`php8.3` explicitly (Composer included). `php artisan nightguardian:install` also prints the cron and systemd lines with the exact binary and path it runs from.
 
 ```bash
 sudo apt-get update && sudo apt-get -y upgrade
@@ -48,7 +50,7 @@ Composer:
 
 ```bash
 curl -sS https://getcomposer.org/installer -o /tmp/composer-setup.php
-sudo php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+sudo php8.3 /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 rm /tmp/composer-setup.php
 composer --version
 ```
@@ -80,8 +82,8 @@ sudo mkdir -p "$NG_DIR"
 sudo chown www-data:www-data "$NG_DIR"
 sudo -u www-data -H git clone https://github.com/pablozagni/nightguardian.git "$NG_DIR"
 cd "$NG_DIR"
-sudo -u www-data -H git checkout v0.1.0          # a released tag; use "main" to follow development
-sudo -u www-data -H composer install --no-dev --optimize-autoloader --no-interaction
+sudo -u www-data -H git checkout v0.1.1          # a released tag; use "main" to follow development
+sudo -u www-data -H php8.3 /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
 ```
 
 ## 5. Configuration
@@ -99,20 +101,20 @@ sudo -u www-data -H sed -i \
   -e "s|^DB_USERNAME=.*|DB_USERNAME=nightguardian|" \
   -e "s|^DB_PASSWORD=.*|DB_PASSWORD=${NG_DB_PASSWORD}|" \
   .env
-sudo -u www-data -H php artisan key:generate --force
+sudo -u www-data -H php8.3 artisan key:generate --force
 sudo chmod 640 .env
 ```
 
 Create the tables and the first super admin (this also runs the migrations):
 
 ```bash
-sudo -u www-data -H php artisan nightguardian:install \
+sudo -u www-data -H php8.3 artisan nightguardian:install \
   --name="$NG_ADMIN_NAME" --email="$NG_ADMIN_EMAIL" --password="$NG_ADMIN_PASSWORD"
-sudo -u www-data -H php artisan optimize
+sudo -u www-data -H php8.3 artisan optimize
 ```
 
 **E-mail alerts** need a mailer. Set `MAIL_MAILER`, `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD` and
-`MAIL_FROM_ADDRESS` in `.env` (any SMTP service works) and run `sudo -u www-data php artisan optimize` again.
+`MAIL_FROM_ADDRESS` in `.env` (any SMTP service works) and run `sudo -u www-data php8.3 artisan optimize` again.
 Telegram alerts need nothing here: the bot token is entered in the panel and stored encrypted.
 
 ## 6. Apache and PHP-FPM
@@ -214,7 +216,7 @@ connection; systemd starts it again immediately.
 curl -sS -o /dev/null -w "login page: HTTP %{http_code}\n" "https://${NG_DOMAIN}/login"      # 200
 curl -sS -o /dev/null -w "health:     HTTP %{http_code}\n" "https://${NG_DOMAIN}/up"         # 200
 curl -sS -o /dev/null -w "ingest, no token: HTTP %{http_code}\n" -X POST "https://${NG_DOMAIN}/api/v1/ingest"   # 401
-sudo -u www-data -H php artisan schedule:list
+sudo -u www-data -H php8.3 artisan schedule:list
 ```
 
 Open `https://nightguardian.example.com`, sign in with the admin e-mail and password from step 1, create a project
@@ -223,7 +225,7 @@ and a token (*Projects → your project → Tokens*), then in the application yo
 ```bash
 composer require nightguardian/laravel
 # in its .env:  NIGHTGUARDIAN_URL=https://nightguardian.example.com   NIGHTGUARDIAN_TOKEN=ng_...
-php artisan nightguardian:test
+php8.3 artisan nightguardian:test
 ```
 
 The panel shows these exact lines when you create a token. To receive alerts, add a Telegram or e-mail channel in the
@@ -252,10 +254,10 @@ else
     run git pull --ff-only
 fi
 
-run composer install --no-dev --optimize-autoloader --no-interaction
-run php artisan migrate --force
-run php artisan optimize
-run php artisan queue:restart        # workers finish their job and start again with the new code
+run php8.3 /usr/local/bin/composer install --no-dev --optimize-autoloader --no-interaction
+run php8.3 artisan migrate --force
+run php8.3 artisan optimize
+run php8.3 artisan queue:restart        # workers finish their job and start again with the new code
 systemctl reload php8.3-fpm          # drops the opcache of the old code
 
 echo "NightGuardian is now at: $(run git describe --tags --always)"
@@ -308,8 +310,8 @@ Copy `/var/backups/nightguardian` off the server regularly (for example with `rs
 | White page or HTTP 500 | `sudo tail -n 50 /var/www/nightguardian/storage/logs/laravel.log` and `/var/log/apache2/nightguardian-error.log`. Usually permissions: `sudo chown -R www-data:www-data /var/www/nightguardian/storage /var/www/nightguardian/bootstrap/cache` |
 | The SDK reports `HTTP 401` though the token is right | The `SetEnvIfNoCase ... HTTP_AUTHORIZATION` line of step 6 is missing, or `a2enmod setenvif` was not run |
 | Alerts never arrive | `sudo systemctl status nightguardian-worker` and `sudo journalctl -u nightguardian-worker -n 50`. In the panel, the channel shows its *Last error* |
-| Digests, thresholds or retention do nothing | `sudo crontab -u www-data -l` must contain the `schedule:run` line; `sudo -u www-data php artisan schedule:list` lists what runs |
-| After editing `.env` nothing changes | `sudo -u www-data php artisan optimize` (the configuration is cached) and `sudo systemctl restart nightguardian-worker` |
+| Digests, thresholds or retention do nothing | `sudo crontab -u www-data -l` must contain the `schedule:run` line; `sudo -u www-data php8.3 artisan schedule:list` lists what runs |
+| After editing `.env` nothing changes | `sudo -u www-data php8.3 artisan optimize` (the configuration is cached) and `sudo systemctl restart nightguardian-worker` |
 | `composer install` runs out of memory | Add swap: `sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile` |
 | Disk filling up | Retention deletes events older than each project's *Retention* (30 days by default); lower it in the project settings, or the database grows with your traffic |
 

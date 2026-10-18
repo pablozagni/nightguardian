@@ -35,12 +35,12 @@ NIGHTGUARDIAN_DEMO_RESET_TIME=04:00                        # in the application 
 The visitor password is public by design (it is printed on the login page). The visitor can only read.
 
 Generate a token once with, for example, `php -r 'echo "ng_".substr(bin2hex(random_bytes(20)), 0, 40), PHP_EOL;'`.
-Then run `php artisan config:clear` (or `optimize`) and make sure the scheduler runs (`schedule:run` every minute, see
+Then run `php artisan config:clear` (use the same PHP binary as the web app, e.g. `php8.3`, when the server has several versions) (or `optimize`) and make sure the scheduler runs (`schedule:run` every minute, see
 [deploy.md](deploy.md)).
 
 ## The nightly reset
 
-`php artisan nightguardian:demo-reset` (scheduled daily at `NIGHTGUARDIAN_DEMO_RESET_TIME`, only in demo mode):
+`php artisan nightguardian:demo-reset` (works with `composer install --no-dev`: it needs no Faker; scheduled daily at `NIGHTGUARDIAN_DEMO_RESET_TIME`, only in demo mode):
 
 1. Deletes projects, issues, events, feedback, deploys, tokens, members, invitations, alert channels and rules, queued
    jobs and sessions, and **every user except the administrator** named by `NIGHTGUARDIAN_DEMO_ADMIN_EMAIL`

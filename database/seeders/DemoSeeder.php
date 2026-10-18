@@ -75,12 +75,12 @@ class DemoSeeder extends Seeder
      */
     public function seedProjects(User $resolver, bool $withAlerts = true): array
     {
-        $shop = Project::factory()->create(['name' => 'Demo Shop', 'slug' => 'demo-shop']);
-        $api = Project::factory()->create(['name' => 'Demo API', 'slug' => 'demo-api', 'platform' => 'php']);
+        $shop = self::createProject('Demo Shop', 'demo-shop', 'laravel');
+        $api = self::createProject('Demo API', 'demo-api', 'php');
 
         foreach ([$shop, $api] as $index => $project) {
             $plainToken = ProjectToken::generatePlainToken();
-            ProjectToken::factory()->for($project)->create(['name' => 'production server', 'token_hash' => ProjectToken::hash($plainToken)]);
+            ProjectToken::query()->create(['project_id' => $project->id, 'name' => 'production server', 'token_hash' => ProjectToken::hash($plainToken)]);
             if ($this->command instanceof Command) {
                 $this->command->info("Ingest token for {$project->name}: {$plainToken}");
             }
@@ -91,10 +91,45 @@ class DemoSeeder extends Seeder
 
             $this->seedIssues($project, $index === 0 ? array_slice(self::ISSUES, 0, 8) : array_slice(self::ISSUES, 8), $resolver);
 
-            Deploy::factory()->for($project)->count(3)->create();
+            $this->seedDeploys($project);
         }
 
         return [$shop, $api];
+    }
+
+    /**
+     * Plain model creation, no factories: the public demo reset runs on production installs, where Faker (a dev dependency) is absent.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public static function createProject(string $name, string $slug, string $platform, array $attributes = []): Project
+    {
+        return Project::query()->create($attributes + [
+            'name' => $name,
+            'slug' => $slug,
+            'platform' => $platform,
+            'retention_days' => 30,
+            'timezone' => config('app.timezone'),
+            'digest_time' => '08:00:00',
+            'rate_limit_per_minute' => 600,
+            'settings' => [],
+        ]);
+    }
+
+    private function seedDeploys(Project $project): void
+    {
+        foreach ([['1.4.0', 12], ['1.4.1', 6], ['1.4.2', 2]] as [$release, $daysAgo]) {
+            Deploy::query()->create([
+                'project_id' => $project->id,
+                'environment' => 'production',
+                'release' => $release,
+                'commit' => sha1($project->slug.$release),
+                'branch' => 'main',
+                'deployer' => 'ci',
+                'url' => null,
+                'deployed_at' => now()->subDays($daysAgo),
+            ]);
+        }
     }
 
     /**
@@ -103,7 +138,16 @@ class DemoSeeder extends Seeder
     private function seedIssues(Project $project, array $definitions, User $resolver): void
     {
         foreach ($definitions as [$class, $message, $level, $status]) {
-            $issue = Issue::factory()->for($project)->create([
+            $issue = Issue::query()->create([
+                'project_id' => $project->id,
+                'type' => EventType::Exception->value,
+                'culprit' => 'App\Http\Controllers\InvoiceController@update',
+                'environments' => ['production'],
+                'first_release' => '1.4.0',
+                'last_release' => '1.4.2',
+                'first_seen_at' => now()->subDays(7),
+                'last_seen_at' => now(),
+                'users_count' => 1,
                 'title' => class_basename($class).': '.Str::limit($message, 200),
                 'exception_class' => $class,
                 'level' => $level,
@@ -113,21 +157,36 @@ class DemoSeeder extends Seeder
                 'events_count' => 0,
             ]);
 
-            IssueFingerprint::factory()->for($issue)->create(['project_id' => $project->id]);
+            IssueFingerprint::query()->create(['issue_id' => $issue->id, 'project_id' => $project->id, 'fingerprint' => sha1($project->slug.$class.$message)]);
 
             $count = rand(3, 24);
             $events = collect(range(1, $count))->map(function (int $i) use ($project, $issue, $class, $message, $level) {
                 $occurred = now()->subMinutes(rand(5, 60 * 24 * 7));
                 $uuid = (string) Str::uuid();
+                $userId = (string) rand(1, 500);
 
-                return Event::factory()->for($project)->for($issue)->create([
+                return Event::query()->create([
                     'uuid' => $uuid,
+                    'project_id' => $project->id,
+                    'issue_id' => $issue->id,
+                    'reference' => 'NG-'.strtoupper(Str::random(4)).'-'.strtoupper(Str::random(4)),
+                    'environment' => 'production',
+                    'release' => '1.4.2',
+                    'server' => 'web-01',
+                    'sdk_name' => 'nightguardian/laravel',
+                    'sdk_version' => '2.0.0',
+                    'platform' => 'php',
+                    'request_method' => 'POST',
+                    'request_route' => 'invoices.update',
+                    'request_url' => 'https://shop.example.com/invoices/42',
+                    'status_code' => 500,
+                    'user_identifier' => $userId,
                     'type' => EventType::Exception,
                     'level' => $level,
                     'message' => Str::limit($message, 1000),
                     'occurred_at' => $occurred,
                     'received_at' => $occurred,
-                    'payload' => $this->payload($uuid, $class, $message, $level, $occurred),
+                    'payload' => $this->payload($uuid, $class, $message, $level, $occurred, $userId),
                 ]);
             });
 
@@ -153,7 +212,9 @@ class DemoSeeder extends Seeder
 
             if ($status === IssueStatus::New) {
                 $event = $events->sortByDesc('occurred_at')->first();
-                Feedback::factory()->for($project)->for($issue)->create([
+                Feedback::query()->create([
+                    'project_id' => $project->id,
+                    'issue_id' => $issue->id,
                     'event_uuid' => $event->uuid,
                     'reference' => $event->reference,
                     'comment' => collect(self::COMMENTS)->random(),
@@ -169,7 +230,7 @@ class DemoSeeder extends Seeder
      *
      * @return array<string, mixed>
      */
-    private function payload(string $uuid, string $class, string $message, Level $level, Carbon $occurred): array
+    private function payload(string $uuid, string $class, string $message, Level $level, Carbon $occurred, string $userId): array
     {
         return [
             'id' => $uuid,
@@ -179,7 +240,7 @@ class DemoSeeder extends Seeder
             'environment' => 'production',
             'release' => '1.4.2',
             'platform' => 'php',
-            'user' => ['id' => (string) rand(1, 500)],
+            'user' => ['id' => $userId],
             'request' => ['method' => 'POST', 'url' => 'https://shop.example.com/invoices/42', 'route' => 'invoices.update', 'status_code' => 500, 'headers' => ['user-agent' => 'Mozilla/5.0', 'accept' => 'text/html']],
             'tags' => ['tenant' => 'acme', 'plan' => 'pro'],
             'payload' => ['handled' => false, 'exceptions' => [[

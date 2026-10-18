@@ -97,10 +97,7 @@ class DemoReset
      */
     private function demoApp(): array
     {
-        $project = Project::factory()->create([
-            'name' => 'Demo app',
-            'slug' => 'demo-app',
-            'platform' => 'laravel',
+        $project = DemoSeeder::createProject('Demo app', 'demo-app', 'laravel', [
             'rate_limit_per_minute' => (int) config('nightguardian.demo.ingest_rate_limit_per_minute'),
         ]);
 
