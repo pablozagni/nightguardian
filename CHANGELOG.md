@@ -16,7 +16,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
   project with the token from `NIGHTGUARDIAN_DEMO_INGEST_TOKEN`.
 
 ### Fixed
-- `nightguardian:demo-reset` failed on production installs (`composer install --no-dev`) with `Call to undefined function Database\Factoriesake()`:
+- `nightguardian:demo-reset` failed on production installs (`composer install --no-dev`) with `Call to undefined function Database\Factories\fake()`:
   the demo data came from Eloquent factories, which need Faker, a development dependency. The demo seeding now creates its
   models directly with realistic hand-written data, so Faker stays a dev dependency. Regression tests added, plus a CI job
   (`production-install`) that runs `composer install --no-dev` and `nightguardian:demo-reset` against MySQL.
