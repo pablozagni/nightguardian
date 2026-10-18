@@ -85,10 +85,8 @@ jobs:
       - run: docker compose up -d --build --wait --wait-timeout 300
       - name: The panel answers
         run: |
-          curl -fsS -o /dev/null -w "login: %{http_code}
-" http://localhost:8080/login
-          curl -fsS -o /dev/null -w "up: %{http_code}
-" http://localhost:8080/up
+          curl -fsS -o /dev/null -w "login: %{http_code} " http://localhost:8080/login
+          curl -fsS -o /dev/null -w "up: %{http_code} " http://localhost:8080/up
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:8080/api/v1/ingest)" = "401"
       - name: Worker and scheduler are running
         run: |
