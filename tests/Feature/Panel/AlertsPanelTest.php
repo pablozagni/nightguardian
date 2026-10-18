@@ -210,3 +210,92 @@ it('renders the alerts tabs in Spanish', function () {
 
     $this->actingAs($team['admin'])->get('/projects/'.$team['project']->id.'/edit')->assertOk()->assertSee('Canales de aviso')->assertSee('Reglas de aviso');
 });
+
+// --- regression: the real create form (live type select, then the dynamic config fields) -------------------------
+// In a browser the config fields only exist after the type is chosen, and Livewire can write `config.bot_token` only into
+// an array. A null `config` swallowed what was typed and the server answered "The bot token field is required".
+
+function ngMountedConfig($page): mixed
+{
+    $data = $page->instance()->mountedActions[0]['data'];
+
+    return array_key_exists('config', $data) ? $data['config'] : 'missing';
+}
+
+it('seeds the config state of the chosen type so the browser can type into it', function () {
+    $team = ngTeam();
+
+    $page = ngChannelsPage($team, 'admin')->mountTableAction('create');
+    expect(ngMountedConfig($page))->toBeNull();
+
+    $page->setTableActionData(['type' => 'telegram']);
+    expect(ngMountedConfig($page))->toBe(['bot_token' => null, 'chat_id' => null]);
+
+    $page->setTableActionData(['type' => 'mail']);
+    expect(ngMountedConfig($page))->toBe(['recipients' => null]);
+});
+
+it('creates a Telegram channel through the form the way the browser fills it', function () {
+    $team = ngTeam();
+
+    ngChannelsPage($team, 'admin')
+        ->mountTableAction('create')
+        ->setTableActionData(['name' => 'On-call', 'type' => 'telegram'])
+        ->setTableActionData(['config.bot_token' => NG_UI_TOKEN, 'config.chat_id' => '-1001234567890'])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    expect(AlertChannel::firstOrFail()->config)->toBe(['bot_token' => NG_UI_TOKEN, 'chat_id' => '-1001234567890']);
+});
+
+it('creates an e-mail channel through the form the way the browser fills it', function () {
+    $team = ngTeam();
+
+    ngChannelsPage($team, 'admin')
+        ->mountTableAction('create')
+        ->setTableActionData(['name' => 'Team', 'type' => 'mail'])
+        ->setTableActionData(['config.recipients' => ['dev@example.com']])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    expect(AlertChannel::firstOrFail()->config)->toBe(['recipients' => ['dev@example.com']]);
+});
+
+it('still requires the Telegram fields when they are really empty', function () {
+    $team = ngTeam();
+
+    ngChannelsPage($team, 'admin')
+        ->mountTableAction('create')
+        ->setTableActionData(['name' => 'On-call', 'type' => 'telegram'])
+        ->callMountedTableAction()
+        ->assertHasTableActionErrors(['config.bot_token' => ['required'], 'config.chat_id' => ['required']]);
+
+    expect(AlertChannel::count())->toBe(0);
+});
+
+it('edits a Telegram channel through the form: blank token keeps the secret, the other fields still validate', function () {
+    $team = ngTeam();
+    $channel = AlertChannel::factory()->for($team['project'])->create(['type' => 'telegram', 'config' => ['bot_token' => NG_UI_TOKEN, 'chat_id' => '12345']]);
+
+    $page = ngChannelsPage($team, 'admin')->mountTableAction('edit', $channel);
+    expect(ngMountedConfig($page))->toBe(['bot_token' => '', 'chat_id' => '12345']);
+
+    $page->setTableActionData(['config.chat_id' => ''])->callMountedTableAction()
+        ->assertHasTableActionErrors(['config.chat_id' => ['required']]);
+    expect($channel->fresh()->config['chat_id'])->toBe('12345');
+
+    $page->setTableActionData(['config.chat_id' => '-100987654321'])->callMountedTableAction()->assertHasNoTableActionErrors();
+    expect($channel->fresh()->config)->toBe(['bot_token' => NG_UI_TOKEN, 'chat_id' => '-100987654321']);
+});
+
+it('edits an e-mail channel through the form', function () {
+    $team = ngTeam();
+    $channel = AlertChannel::factory()->for($team['project'])->create(['type' => 'mail', 'config' => ['recipients' => ['dev@example.com']]]);
+
+    ngChannelsPage($team, 'admin')->mountTableAction('edit', $channel)
+        ->setTableActionData(['config.recipients' => ['ops@example.com', 'dev@example.com']])
+        ->callMountedTableAction()
+        ->assertHasNoTableActionErrors();
+
+    expect($channel->fresh()->config)->toBe(['recipients' => ['ops@example.com', 'dev@example.com']]);
+});

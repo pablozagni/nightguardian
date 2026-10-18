@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-10-18
+
+### Fixed
+- Projects → Edit → Alert channels → Create: with Type = Telegram, filling "Bot token" and "Chat ID" ended in "The bot token field is
+  required" / "The chat ID field is required". The `config` state was `null` until a type was chosen, and the browser cannot write
+  `config.bot_token` into a `null`, so the typed values never reached the server. Choosing a type now seeds `config` with the
+  fields of that type (and resets it when the type changes). E-mail channels were affected the same way.
+- Editing a channel opened with empty settings (for example a blank "Chat ID"): `config` is a hidden attribute of the model, so it was
+  missing from the record data of the form. The form now reads it from the model; a blank secret still means "keep the current one",
+  and the other fields validate normally.
+- The regression tests drive the real form the way a browser does (pick the type, then fill the dynamic fields) for Telegram and
+  e-mail, on create and on edit; the old tests sent a ready-made `config` and could not see either problem.
+
 ## [0.1.1] - 2026-10-18
 
 ### Added

@@ -12,6 +12,7 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -19,6 +20,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -50,6 +52,15 @@ class AlertChannelsRelationManager extends RelationManager
                 ->options(fn (): array => app(ChannelRegistry::class)->options())
                 ->required()
                 ->live()
+                // The browser can only write `config.bot_token` into an array: a null `config` (the state before a type
+                // is chosen) silently swallows what the user types. Seed every field of the chosen type with null.
+                ->afterStateUpdated(function (mixed $state, Set $set): void {
+                    $registry = app(ChannelRegistry::class);
+
+                    $set('config', is_string($state) && $registry->has($state)
+                        ? array_fill_keys(array_map(fn (Field $field): string => $field->getName(), array_filter($registry->class($state)::configForm(), fn ($component): bool => $component instanceof Field)), null)
+                        : []);
+                })
                 ->disabled(fn (string $operation): bool => $operation === 'edit')
                 ->dehydrated(),
             Group::make()
@@ -99,9 +110,10 @@ class AlertChannelsRelationManager extends RelationManager
                     ->action(fn (AlertChannel $record) => $this->sendTest($record)),
                 EditAction::make()
                     ->authorize(fn (): bool => $this->canManage())
+                    // `config` is a hidden attribute, so it is not part of the record data: read it from the model.
                     // Secrets are never sent back to the browser.
-                    ->mutateRecordDataUsing(function (array $data): array {
-                        $data['config'] = $this->blankSecrets((array) ($data['config'] ?? []));
+                    ->mutateRecordDataUsing(function (array $data, AlertChannel $record): array {
+                        $data['config'] = $this->blankSecrets($record->config);
 
                         return $data;
                     })
