@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property array<string, mixed> $settings
+ */
 class Project extends Model
 {
     /** @use HasFactory<ProjectFactory> */
@@ -32,6 +35,22 @@ class Project extends Model
             'settings' => 'array',
             'archived_at' => 'datetime',
         ];
+    }
+
+    /**
+     * A value of the `settings` json (cooldown_minutes, max_alerts_per_hour, threshold_count, language, …).
+     */
+    public function setting(string $key, mixed $default = null): mixed
+    {
+        return $this->settings[$key] ?? $default;
+    }
+
+    /** Language of alert messages and digests. */
+    public function language(): string
+    {
+        $language = $this->setting('language', 'en');
+
+        return in_array($language, User::LOCALES, true) ? $language : 'en';
     }
 
     public function isArchived(): bool

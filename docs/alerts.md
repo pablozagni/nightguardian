@@ -24,6 +24,17 @@
 Default levels: exceptions → `error`; slow request/query → `warning` (so they don't alert with the
 default `min_level = error`); job/schedule failures → `error`.
 
+## Implementation notes
+
+- Evaluation runs in the queued job `EvaluateAlerts` (`App\Alerts\AlertEvaluator`). The ingest dispatches it for new and
+  regressed issues, for `test` events, and for every grouped event when the project has an enabled `always_notify` rule.
+- The cooldown uses `issues.last_alerted_at`; the hourly cap and the suppressed counter use the application cache
+  (fixed one-hour buckets), and the threshold window uses a cache lock per issue.
+- Project settings (`projects.settings` json): `language` (`en`/`es`), `cooldown_minutes`, `max_alerts_per_hour`,
+  `threshold_count`, `threshold_minutes`, `digest_skip_empty`.
+- The scheduler runs `nightguardian:digest` and `nightguardian:thresholds` every minute and `nightguardian:prune` daily
+  at 03:30. Without a worker and cron nothing is sent: see "Running the queue and the scheduler" in the README.
+
 ## Message content
 
 Short, actionable, translated to the project's language (setting, default `en`):

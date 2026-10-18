@@ -25,6 +25,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
   - Deploys list and users management (super admins only).
   - `issue_activities` table with the status history of each issue (including automatic regressions).
   - English and Spanish translations; authorization tests per role.
+- Alerts, digest and retention (stage C5):
+  - `AlertChannel` interface, `TelegramChannel` (Bot API, HTML, 10 s timeout) and `MailChannel`, channel registry in `config/nightguardian.php`.
+  - `EvaluateAlerts` and `SendAlert` jobs implementing `docs/alerts.md`: ignored issues, never/always notify and critical-level rules, channel minimum level and toggles, per-issue cooldown, hourly cap per project with a "N alerts suppressed" note, threshold alerts, one-time "connection OK" notice; 3 tries with 30 / 120 / 600 s backoff.
+  - Alert channels and rules tabs in the project (with "Send test"); alert settings (language, cooldown, cap, threshold). Telegram tokens are stored encrypted, never shown again and never written to logs or error messages.
+  - Daily digest per project at its digest time and time zone (`nightguardian:digest`), threshold evaluation (`nightguardian:thresholds`) and retention pruning in chunks plus 90-day alert logs (`nightguardian:prune`), all registered in the scheduler.
+  - English and Spanish messages (by project language).
 - `DemoSeeder` (2 projects, 3 users, 15 issues with events, feedback and deploys), run by `php artisan db:seed`.
 - Ingest API v1 (`POST /api/v1/ingest`): bearer token authentication (sha256, cached 60 s), gzip with a 5 MB inflate cap, batch and per-event validation, all nine event types, idempotent storage by event id, per-project rate limit (429 + `Retry-After`), per-IP limit for invalid tokens, and the `X-NightGuardian-Dry-Run` header.
 - Default grouping (`DefaultFingerprinter`, `Normalizer`) and issue status transitions (new, regressed, resolved, ignored) as described in `docs/grouping.md`.

@@ -17,6 +17,9 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $project_id
  * @property string $title
+ * @property string $type
+ * @property string|null $exception_class
+ * @property Carbon|null $last_alerted_at
  * @property string|null $culprit
  * @property Level $level
  * @property IssueStatus $status

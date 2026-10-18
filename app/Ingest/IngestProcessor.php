@@ -29,6 +29,7 @@ class IngestProcessor
         $scrubber = Scrubber::fromConfig();
         $sdk = $this->batchSdk($body);
         $results = [];
+        $hasAlwaysNotify = null;
         $accepted = 0;
         $rejected = 0;
 
@@ -72,7 +73,8 @@ class IngestProcessor
 
             if ($stored->update !== null) {
                 $result['issue'] = $stored->update->issue->getKey();
-                $this->dispatchAlerts($stored->update, (string) $event['id'], (string) $event['type']);
+                $hasAlwaysNotify ??= $project->alertRules()->where('enabled', true)->where('action', 'always_notify')->exists();
+                $this->dispatchAlerts($stored->update, (string) $event['id'], (string) $event['type'], $hasAlwaysNotify);
             }
 
             $results[] = $result;
@@ -81,9 +83,14 @@ class IngestProcessor
         return ['accepted' => $accepted, 'rejected' => $rejected, 'results' => $results];
     }
 
-    private function dispatchAlerts(IssueUpdate $update, string $eventUuid, string $type): void
+    private function dispatchAlerts(IssueUpdate $update, string $eventUuid, string $type, bool $hasAlwaysNotify): void
     {
         $trigger = $type === 'test' ? 'test' : $update->transition;
+
+        // "Always notify" rules apply to every event, not only to new or regressed issues.
+        if ($trigger === null && $hasAlwaysNotify) {
+            $trigger = 'rule';
+        }
 
         if ($trigger !== null) {
             EvaluateAlerts::dispatch((string) $update->issue->getKey(), $trigger, $eventUuid);

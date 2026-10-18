@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Projects;
 use App\Filament\Resources\Projects\Pages\CreateProject;
 use App\Filament\Resources\Projects\Pages\EditProject;
 use App\Filament\Resources\Projects\Pages\ListProjects;
+use App\Filament\Resources\Projects\RelationManagers\AlertChannelsRelationManager;
+use App\Filament\Resources\Projects\RelationManagers\AlertRulesRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\InvitationsRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Projects\RelationManagers\TokensRelationManager;
@@ -16,6 +18,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -101,6 +104,33 @@ class ProjectResource extends Resource
                         ->helperText(__('nightguardian.projects.rate_limit_help'))
                         ->numeric()->minValue(1)->required()->default(600),
                 ]),
+            Section::make(__('nightguardian.projects.alerts_section'))
+                ->description(__('nightguardian.projects.alerts_help'))
+                ->columns(2)
+                ->schema([
+                    Select::make('settings.language')
+                        ->label(__('nightguardian.projects.language'))
+                        ->options(['en' => 'English', 'es' => 'Español'])
+                        ->default('en'),
+                    TextInput::make('settings.cooldown_minutes')
+                        ->label(__('nightguardian.projects.cooldown'))
+                        ->helperText(__('nightguardian.projects.cooldown_help'))
+                        ->numeric()->minValue(1)->default(60),
+                    TextInput::make('settings.max_alerts_per_hour')
+                        ->label(__('nightguardian.projects.max_per_hour'))
+                        ->helperText(__('nightguardian.projects.max_per_hour_help'))
+                        ->numeric()->minValue(1)->default(20),
+                    TextInput::make('settings.threshold_count')
+                        ->label(__('nightguardian.projects.threshold_count'))
+                        ->numeric()->minValue(1)->default(50),
+                    TextInput::make('settings.threshold_minutes')
+                        ->label(__('nightguardian.projects.threshold_minutes'))
+                        ->helperText(__('nightguardian.projects.threshold_help'))
+                        ->numeric()->minValue(1)->default(60),
+                    Toggle::make('settings.digest_skip_empty')
+                        ->label(__('nightguardian.projects.digest_skip_empty'))
+                        ->default(true),
+                ]),
         ]);
     }
 
@@ -130,6 +160,8 @@ class ProjectResource extends Resource
             MembersRelationManager::class,
             InvitationsRelationManager::class,
             TokensRelationManager::class,
+            AlertChannelsRelationManager::class,
+            AlertRulesRelationManager::class,
         ];
     }
 

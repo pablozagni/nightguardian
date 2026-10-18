@@ -130,8 +130,8 @@ it('has exactly the same translation keys in English and Spanish', function () {
         return $keys;
     };
 
-    $en = $flatten(require lang_path('en/nightguardian.php'));
-    $es = $flatten(require lang_path('es/nightguardian.php'));
+    $en = [...$flatten(require lang_path('en/nightguardian.php')), ...array_map(fn ($k) => 'alerts.'.$k, $flatten(require lang_path('en/alerts.php')))];
+    $es = [...$flatten(require lang_path('es/nightguardian.php')), ...array_map(fn ($k) => 'alerts.'.$k, $flatten(require lang_path('es/alerts.php')))];
 
     expect(array_diff($en, $es))->toBe([])->and(array_diff($es, $en))->toBe([]);
 });

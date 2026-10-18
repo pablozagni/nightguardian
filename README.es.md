@@ -43,6 +43,18 @@ NightGuardian es la alternativa:
 - **Tokens:** al crear un token se muestra **una sola vez**, con las dos líneas para el `.env` de la app y `composer require nightguardian/laravel`; solo se guarda su hash.
 - **Acceso:** enlaces de invitación (firmados, 7 días, un solo uso) para proyectos y para la instancia; los super admins gestionan usuarios.
 
+## Cola y scheduler
+
+Los avisos, los resúmenes y la retención necesitan un worker de cola y el scheduler. En producción: un worker con
+systemd/Supervisor y una línea de cron (`* * * * * php artisan schedule:run`). Para probar en local, en dos consolas:
+
+```powershell
+php artisan queue:work --tries=3
+php artisan schedule:work
+```
+
+Los tokens de bots de Telegram se cargan en el panel (proyecto → *Canales de aviso*), se guardan cifrados y nunca van a archivos.
+
 ## Inicio rápido
 
 ```bash

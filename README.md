@@ -65,6 +65,18 @@ questions and a credit card you can never quite cancel. NightGuardian is the oth
 - **Tokens:** creating a token shows it **once**, with the two lines to paste in the app's `.env` and `composer require nightguardian/laravel`; only its hash is stored.
 - **Access:** invitation links (signed, 7 days, one use) for projects and for the instance; super admins manage users.
 
+## Running the queue and the scheduler
+
+Alerts, digests and retention need a queue worker and the scheduler. In production use a systemd/Supervisor worker and
+one cron line (`* * * * * php artisan schedule:run`). To try it locally, in two consoles:
+
+```powershell
+php artisan queue:work --tries=3
+php artisan schedule:work
+```
+
+Telegram bot tokens are entered in the panel (project → *Alert channels*), stored encrypted, and never written to files.
+
 ## Quick start
 
 > 🚧 NightGuardian is under active construction. The steps below describe the target v0.1 experience.

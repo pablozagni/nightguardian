@@ -1,5 +1,8 @@
 <?php
 
+use App\Alerts\Channels\MailChannel;
+use App\Alerts\Channels\TelegramChannel;
+
 return [
 
     /*
@@ -32,6 +35,11 @@ return [
     ],
 
     /*
+    | Retention: events are deleted in chunks of this size (nightguardian:prune).
+    */
+    'retention' => ['chunk' => 1000],
+
+    /*
     | Alert defaults (see docs/alerts.md).
     */
     'alerts' => [
@@ -45,8 +53,8 @@ return [
     | Channel classes are added in the alerts stage.
     */
     'alert_channels' => [
-        // 'telegram' => App\Alerts\Channels\TelegramChannel::class,
-        // 'mail' => App\Alerts\Channels\MailChannel::class,
+        'telegram' => TelegramChannel::class,
+        'mail' => MailChannel::class,
     ],
 
 ];

@@ -2,33 +2,41 @@
 
 namespace App\Jobs;
 
+use App\Alerts\AlertEvaluator;
+use App\Models\Event;
+use App\Models\Issue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Log;
 
 /**
- * Decides whether an issue change must notify someone. Stub: the real implementation arrives with the
- * alerts stage (docs/alerts.md); for now it only logs what would be evaluated.
+ * Decides whether an issue change must notify someone and queues one SendAlert per channel
+ * (rules in docs/alerts.md, implemented by AlertEvaluator).
  */
 class EvaluateAlerts implements ShouldQueue
 {
     use Queueable;
 
     /**
-     * @param  string  $trigger  `new`, `regressed` or `test`
+     * @param  string  $trigger  `new`, `regressed`, `rule`, `threshold` or `test`
+     * @param  int|null  $windowCount  Threshold only: events counted in the window.
      */
     public function __construct(
         public readonly string $issueId,
         public readonly string $trigger,
         public readonly string $eventUuid,
+        public readonly ?int $windowCount = null,
     ) {}
 
-    public function handle(): void
+    public function handle(AlertEvaluator $evaluator): void
     {
-        Log::info('EvaluateAlerts (stub)', [
-            'issue' => $this->issueId,
-            'trigger' => $this->trigger,
-            'event' => $this->eventUuid,
-        ]);
+        $issue = Issue::query()->with('project')->find($this->issueId);
+
+        if ($issue === null) {
+            return;
+        }
+
+        $event = Event::query()->where('uuid', $this->eventUuid)->first();
+
+        $evaluator->evaluate($issue, $this->trigger, $event, $this->windowCount);
     }
 }
