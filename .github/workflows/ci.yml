@@ -82,7 +82,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose config --quiet
-      - run: docker compose up -d --build --wait --wait-timeout 300
+      - run: docker compose up -d --build app db
+      - name: Wait for the web app to be healthy
+        run: |
+          for i in $(seq 1 60); do
+            [ "$(docker compose ps app --format '{{.Health}}')" = "healthy" ] && exit 0
+            sleep 5
+          done
+          echo "the web app did not become healthy" >&2; exit 1
+      - run: docker compose up -d worker scheduler
       - name: The panel answers
         run: |
           curl -fsS -o /dev/null -w "login: %{http_code} " http://localhost:8080/login
