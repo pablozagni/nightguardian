@@ -51,6 +51,8 @@ services:
 
   worker:
     <<: *app
+    healthcheck:
+      disable: true   # the image's check is for the web server
     command: ["php", "artisan", "queue:work", "--tries=3", "--max-time=3600", "--sleep=3"]
     depends_on:
       app:
@@ -58,6 +60,8 @@ services:
 
   scheduler:
     <<: *app
+    healthcheck:
+      disable: true   # the image's check is for the web server
     command: ["php", "artisan", "schedule:work"]
     depends_on:
       app:
