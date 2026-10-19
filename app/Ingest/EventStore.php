@@ -80,6 +80,7 @@ class EventStore
             'environment' => $event['environment'] ?? null,
             'release' => $event['release'] ?? null,
             'server' => $event['server'] ?? null,
+            'host' => HostResolver::resolve($event),
             'sdk_name' => $sdk['name'] ?? null,
             'sdk_version' => $sdk['version'] ?? null,
             'platform' => $event['platform'] ?? null,

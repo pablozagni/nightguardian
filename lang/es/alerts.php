@@ -83,6 +83,8 @@ return [
         'digest' => 'Resumen',
         'test' => 'Prueba',
     ],
+    'host' => 'host :host',
+    'installations' => '{1} en :count instalación|[2,*] en :count instalaciones',
     'release' => 'release :release',
     'threshold_line' => ':count eventos en los últimos :minutes minutos',
     'events' => '{1} :count evento|[2,*] :count eventos',

@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property EventType $type
  * @property string|null $reference
  * @property string $project_id
+ * @property string|null $host
  * @property string|null $message
  * @property string|null $sdk_name
  * @property string|null $sdk_version

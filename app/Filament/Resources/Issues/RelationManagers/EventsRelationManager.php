@@ -42,6 +42,7 @@ class EventsRelationManager extends RelationManager
                     ->dateTime(timezone: IssueResource::timezone())
                     ->sortable(),
                 TextColumn::make('reference')->label(__('nightguardian.events.reference'))->placeholder('—')->copyable()->fontFamily('mono'),
+                TextColumn::make('host')->label(__('nightguardian.issues.host'))->placeholder('—')->fontFamily('mono')->searchable(),
                 TextColumn::make('environment')->label(__('nightguardian.issues.environment'))->badge()->color('gray')->placeholder('—'),
                 TextColumn::make('release')->label(__('nightguardian.issues.release'))->placeholder('—'),
                 TextColumn::make('request_route')->label(__('nightguardian.events.route'))->placeholder('—'),

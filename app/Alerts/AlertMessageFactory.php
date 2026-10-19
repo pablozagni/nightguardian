@@ -6,6 +6,7 @@ use App\Filament\Resources\Issues\IssueResource;
 use App\Models\Event;
 use App\Models\Issue;
 use App\Models\Project;
+use App\Support\IssueHosts;
 use Illuminate\Support\Str;
 
 /**
@@ -41,6 +42,16 @@ class AlertMessageFactory
 
         if ($kind === 'threshold' && $windowCount !== null && $windowMinutes !== null) {
             $lines[] = trans('alerts.threshold_line', ['count' => $windowCount, 'minutes' => $windowMinutes], $locale);
+        }
+
+        $installations = IssueHosts::count($issue);
+        $host = $event?->host;
+
+        if ($host !== null || $installations > 1) {
+            $lines[] = implode(' · ', array_filter([
+                $host !== null ? trans('alerts.host', ['host' => $host], $locale) : null,
+                $installations > 1 ? trans_choice('alerts.installations', $installations, ['count' => $installations], $locale) : null,
+            ]));
         }
 
         $lines[] = implode(' · ', [

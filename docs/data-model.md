@@ -78,13 +78,14 @@ Merging issue B into A re-points B's fingerprints to A.
 | occurred_at | timestamp(3) | protocol `timestamp` |
 | received_at | timestamp(3) | |
 | environment, release, server | | |
+| host | string(255) null | the installation: `tags.host`, else the host of `request.url`; indexed |
 | sdk_name, sdk_version, platform | | |
 | message | string(1024) null | short text for lists |
 | request_method, request_route, request_url(1024), status_code | | |
 | user_identifier | string(191) null | |
 | payload | json | full normalized event (scrubbed) |
 
-Indexes: (project_id, occurred_at), (issue_id, occurred_at), (reference).
+Indexes: (project_id, occurred_at), (issue_id, occurred_at), (reference), (host), (issue_id, host).
 Pruned by `occurred_at < now() - retention_days` in chunks of 1,000.
 
 ### `feedback`

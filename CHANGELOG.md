@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-19
+
+### Added
+- **Many installations of one app** (SaaS with one copy per customer, sharing a project token):
+  - `events.host` (string 255, nullable, indexed), filled at ingest from the `host` tag or, when missing, the host of `request.url`.
+    The migration backfills existing events in chunks.
+  - The issue detail has an **Affected installations** block: every host with its number of events and when it was last seen.
+  - Triage can be filtered by host, and the events of an issue show a host column.
+  - Telegram and e-mail alerts name the host of the event and, once the issue was seen in several, "in N installations"
+    (English and Spanish).
+  - Protocol v1 documents `tags.host` as a recommended convention (additive, ADR 0006); the Laravel SDK 2.1 / 1.1 sends it by default.
+
 ### Changed
 - Panel and tables follow the shared Filament standards: wider sidebar that collapses on desktop, full-width content, unsaved-changes alerts,
   filters/sort/search remembered per session and applied live, searchable preloaded selects, small red Delete buttons, no "create another".

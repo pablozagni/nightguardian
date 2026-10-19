@@ -55,6 +55,7 @@ questions and a credit card you can never quite cancel. NightGuardian is the oth
 |---|---|
 | **Capture** | Exceptions, error logs, failed jobs, failed scheduled tasks, slow requests, slow queries, deploys, user feedback |
 | **Triage** | Grouping by smart fingerprint, statuses *new / regressed / resolved / ignored*, merge issues, search by reference code |
+| **Installations** | One app, many copies (a SaaS with one install per customer): share a token and the same bug stays one issue, with the affected hosts listed, a host filter and the host in every alert |
 | **Alerts** | Telegram and e-mail per project, minimum level per channel, "always notify" rules, cooldowns, daily digest |
 | **Access** | Multiple projects, per-project roles (admin / member / viewer), optional 2FA |
 | **Privacy** | Secrets scrubbed in the SDK *and* again in the collector; IPs and request bodies off by default |

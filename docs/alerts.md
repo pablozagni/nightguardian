@@ -43,9 +43,16 @@ Short, actionable, translated to the project's language (setting, default `en`):
 🔴 NEW · Acme Billing (production)
 QueryException: Integrity constraint violation … 'description' cannot be null
 InvoiceController@update · release a1b2c3d
+host yapai.head-office.com.ar · in 3 installations
 3 events · 1 user · first seen 2 min ago
 → https://ng.example.com/issues/01JAB…
 ```
+
+The `host` line appears when the event reports a host; "in N installations" when the issue has already been seen in more than one
+(see *Tag conventions* in the protocol).
+
+The `host` line appears when the event reports a host; "in N installations" when the issue has already been seen in more than one
+(see *Tag conventions* in the protocol).
 
 Icons: 🔴 new · 🟠 regressed · 📈 threshold · ⚡ rule · 📋 digest.
 

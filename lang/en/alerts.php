@@ -84,6 +84,8 @@ return [
         'test' => 'Test',
     ],
     'release' => 'release :release',
+    'host' => 'host :host',
+    'installations' => '{1} in :count installation|[2,*] in :count installations',
     'threshold_line' => ':count events in the last :minutes minutes',
     'events' => '{1} :count event|[2,*] :count events',
     'users' => '{0} no users|{1} :count user|[2,*] :count users',

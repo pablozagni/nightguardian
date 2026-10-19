@@ -12,9 +12,11 @@ use App\Filament\Resources\Issues\RelationManagers\EventsRelationManager;
 use App\Filament\Resources\Issues\RelationManagers\FeedbackRelationManager;
 use App\Filament\Support\ScopesToUserProjects;
 use App\Issues\IssueActions;
+use App\Models\Event;
 use App\Models\Issue;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\IssueHosts;
 use BackedEnum;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -116,6 +118,12 @@ class IssueResource extends Resource
                     ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
                         ? $query->whereJsonContains('environments', $data['value'])
                         : $query),
+                SelectFilter::make('host')
+                    ->label(__('nightguardian.issues.host'))
+                    ->options(fn (): array => self::hosts())
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? $query->whereHas('events', fn (Builder $events) => $events->where('host', $data['value']))
+                        : $query),
                 SelectFilter::make('type')->label(__('nightguardian.issues.type'))->options(EventType::class),
                 SelectFilter::make('level')->label(__('nightguardian.issues.level'))->options(Level::class)->multiple(),
                 Filter::make('release')
@@ -183,6 +191,15 @@ class IssueResource extends Resource
                         ->visible(fn (Issue $record): bool => $record->ignored_until !== null),
                 ]),
             ]),
+            Section::make(__('nightguardian.issues.hosts_title'))
+                ->description(__('nightguardian.issues.hosts_help'))
+                ->visible(fn (Issue $record): bool => IssueHosts::count($record) > 0)
+                ->schema([
+                    View::make('filament.issue-hosts')->viewData(fn (Issue $record): array => [
+                        'hosts' => IssueHosts::breakdown($record),
+                        'timezone' => static::timezone(),
+                    ]),
+                ]),
             Section::make(__('nightguardian.issues.latest_event'))
                 ->schema([
                     View::make('filament.latest-event')->viewData(fn (Issue $record): array => [
@@ -256,6 +273,21 @@ class IssueResource extends Resource
         $ids = $user instanceof User ? $user->visibleProjectIds() : [];
 
         return Project::query()->when($ids !== null, fn ($query) => $query->whereIn('id', $ids ?? []))->orderBy('name')->get();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private static function hosts(): array
+    {
+        return Event::query()
+            ->whereIn('project_id', static::visibleProjects()->pluck('id'))
+            ->whereNotNull('host')
+            ->distinct()
+            ->orderBy('host')
+            ->limit(500)
+            ->pluck('host', 'host')
+            ->all();
     }
 
     /**
