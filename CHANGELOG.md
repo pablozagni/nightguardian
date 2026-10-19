@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 
 ## [Unreleased]
 
+### Changed
+- Panel and tables follow the shared Filament standards: wider sidebar that collapses on desktop, full-width content, unsaved-changes alerts,
+  filters/sort/search remembered per session and applied live, searchable preloaded selects, small red Delete buttons, no "create another".
+  Project and user lists open the record when the row is clicked (no Edit button); in the alert channel and rule tabs a row click opens
+  the edit modal. Create/Edit pages extend `BaseCreateRecord`/`BaseEditRecord`; the first form field is focused; the Telegram bot token
+  field has a visibility toggle; the members table has a default sort.
+
 ## [0.1.2] - 2026-10-18
 
 ### Fixed

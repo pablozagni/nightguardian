@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\Users\Pages;
 
+use App\Filament\Resources\Pages\BaseEditRecord;
 use App\Filament\Resources\Users\UserResource;
 use Filament\Actions\DeleteAction;
-use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 
-class EditUser extends EditRecord
+class EditUser extends BaseEditRecord
 {
     protected static string $resource = UserResource::class;
 

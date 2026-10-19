@@ -7,7 +7,6 @@ use App\Filament\Resources\Users\Pages\ListUsers;
 use App\Models\User;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -57,7 +56,7 @@ class UserResource extends Resource
     {
         return $schema->components([
             Section::make()->columns(2)->schema([
-                TextInput::make('name')->label(__('nightguardian.members.name'))->required()->maxLength(255),
+                TextInput::make('name')->label(__('nightguardian.members.name'))->autofocus()->required()->maxLength(255),
                 TextInput::make('email')->label(__('nightguardian.members.email'))->email()->required()->maxLength(255)->unique(ignoreRecord: true),
                 Select::make('locale')->label(__('nightguardian.users.locale'))->options(['en' => 'English', 'es' => 'Español'])->required(),
                 Select::make('timezone')
@@ -92,8 +91,8 @@ class UserResource extends Resource
                 TextColumn::make('projects_count')->label(__('nightguardian.projects.plural'))->numeric(),
                 TextColumn::make('locale')->label(__('nightguardian.users.locale'))->badge()->color('gray'),
             ])
+            ->recordUrl(fn (User $record): string => static::getUrl('edit', ['record' => $record]))
             ->recordActions([
-                EditAction::make(),
                 DeleteAction::make(),
             ]);
     }

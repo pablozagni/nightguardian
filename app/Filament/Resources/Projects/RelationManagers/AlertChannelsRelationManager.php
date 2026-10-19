@@ -46,7 +46,7 @@ class AlertChannelsRelationManager extends RelationManager
     public function form(Schema $schema): Schema
     {
         return $schema->components([
-            TextInput::make('name')->label(__('alerts.name'))->required()->maxLength(255),
+            TextInput::make('name')->label(__('alerts.name'))->autofocus()->required()->maxLength(255),
             Select::make('type')
                 ->label(__('alerts.type'))
                 ->options(fn (): array => app(ChannelRegistry::class)->options())
@@ -102,6 +102,8 @@ class AlertChannelsRelationManager extends RelationManager
                         $this->assertValid($data['type'] ?? null, (array) ($data['config'] ?? []), $action);
                     }),
             ])
+            // Clicking a row edits it (the Edit action stays mounted for that, without its own button).
+            ->recordAction('edit')
             ->recordActions([
                 Action::make('test')
                     ->label(__('alerts.send_test'))
@@ -109,6 +111,7 @@ class AlertChannelsRelationManager extends RelationManager
                     ->authorize(fn (): bool => $this->canManage())
                     ->action(fn (AlertChannel $record) => $this->sendTest($record)),
                 EditAction::make()
+                    ->extraAttributes(['style' => 'display: none'])
                     ->authorize(fn (): bool => $this->canManage())
                     // `config` is a hidden attribute, so it is not part of the record data: read it from the model.
                     // Secrets are never sent back to the browser.

@@ -39,7 +39,7 @@ class AlertRulesRelationManager extends RelationManager
         }
 
         return $schema->components([
-            TextInput::make('name')->label(__('alerts.name'))->required()->maxLength(255),
+            TextInput::make('name')->label(__('alerts.name'))->autofocus()->required()->maxLength(255),
             Select::make('field')->label(__('alerts.field'))->options($fields)->required()->live()->dehydrated(),
             TextInput::make('tag_key')
                 ->label(__('alerts.tag_key'))
@@ -87,8 +87,11 @@ class AlertRulesRelationManager extends RelationManager
                     ->authorize(fn (): bool => $this->canManage())
                     ->mutateDataUsing(fn (array $data): array => $this->withTagField($data)),
             ])
+            // Clicking a row edits it (the Edit action stays mounted for that, without its own button).
+            ->recordAction('edit')
             ->recordActions([
                 EditAction::make()
+                    ->extraAttributes(['style' => 'display: none'])
                     ->authorize(fn (): bool => $this->canManage())
                     ->mutateRecordDataUsing(function (array $data): array {
                         if (is_string($data['field'] ?? null) && str_starts_with($data['field'], 'tag:')) {

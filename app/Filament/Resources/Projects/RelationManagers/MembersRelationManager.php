@@ -37,6 +37,7 @@ class MembersRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('name')
+            ->defaultSort('name')
             ->columns([
                 TextColumn::make('name')->label(__('nightguardian.members.name'))->weight('semibold')->searchable(),
                 TextColumn::make('email')->label(__('nightguardian.members.email'))->searchable(),

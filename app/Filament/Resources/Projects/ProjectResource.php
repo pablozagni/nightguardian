@@ -14,7 +14,6 @@ use App\Filament\Support\ScopesToUserProjects;
 use App\Models\Project;
 use BackedEnum;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\TimePicker;
@@ -67,6 +66,7 @@ class ProjectResource extends Resource
                 ->schema([
                     TextInput::make('name')
                         ->label(__('nightguardian.projects.name'))
+                        ->autofocus()
                         ->required()
                         ->maxLength(120)
                         ->live(onBlur: true)
@@ -148,8 +148,8 @@ class ProjectResource extends Resource
                 TextColumn::make('open_issues_count')->label(__('nightguardian.projects.open_issues'))->numeric(),
                 TextColumn::make('retention_days')->label(__('nightguardian.projects.retention_days'))->suffix(' d'),
             ])
+            ->recordUrl(fn (Project $record): string => static::getUrl('edit', ['record' => $record]))
             ->recordActions([
-                EditAction::make(),
                 DeleteAction::make(),
             ]);
     }

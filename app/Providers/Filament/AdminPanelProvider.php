@@ -18,6 +18,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -48,6 +49,11 @@ class AdminPanelProvider extends PanelProvider
                     ->visible(fn (): bool => ! DemoMode::isVisitor(Filament::auth()->user())),
             ])
             ->brandName('NightGuardian')
+            ->sidebarWidth('15rem')
+            ->collapsedSidebarWidth('9rem')
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth(Width::Full)
+            ->unsavedChangesAlerts()
             ->darkMode()
             ->colors([
                 'primary' => Color::Indigo,

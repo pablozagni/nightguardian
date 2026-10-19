@@ -33,6 +33,7 @@ class TelegramChannel implements AlertChannel
                 ->label(__('alerts.telegram.bot_token'))
                 ->helperText(__('alerts.telegram.bot_token_help'))
                 ->password()
+                ->revealable()
                 ->autocomplete(false)
                 ->required(fn (?string $operation): bool => $operation === 'create')
                 ->placeholder(fn (?string $operation): ?string => $operation === 'edit' ? __('alerts.keep_secret') : null),
