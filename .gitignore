@@ -31,3 +31,6 @@ Thumbs.db
 /public/fonts-manifest.dev.json
 /public/fonts/filament
 _ide_helper.php
+
+# Server-local deploy settings (see pull.sh)
+deploy.env
