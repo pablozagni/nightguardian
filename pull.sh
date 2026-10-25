@@ -63,10 +63,23 @@ git -c safe.directory="$ROOT" pull --ff-only
 echo "==> composer install"
 "$PHP_BIN" "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
 
-if [[ -f package.json ]] && grep -q '"build"' package.json; then
-    echo "==> npm ci && npm run build"
-    npm ci
-    npm run build
+# Vite assets are optional here (the panel is Filament and has no @vite views), so a failed
+# front-end build is a warning, not a reason to abort the deploy.
+build_assets() {
+    if [[ -f package-lock.json ]]; then
+        npm ci && npm run build
+    else
+        npm install --no-audit --no-fund && npm run build
+    fi
+}
+
+if [[ -f package.json ]] && grep -Eq '"build"[[:space:]]*:' package.json; then
+    echo "==> npm build"
+    if ! build_assets; then
+        echo "WARNING: npm build failed, continuing without public/build" >&2
+    fi
+else
+    echo "==> sin script build, se omite npm"
 fi
 
 if [[ ! -f "$ROOT/.env" ]]; then
