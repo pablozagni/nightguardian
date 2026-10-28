@@ -1,22 +1,21 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
-# Production deploy. Run as root (e.g. from a two-line wrapper: `bash /path/to/this/pull.sh`).
-# Puts the app in maintenance mode, updates the code and dependencies, builds assets,
-# migrates and brings the app back up -- even when a step fails.
+# Deploy de nightguardian — ejecutar como root: bash /var/www/<dominio>/pull.sh
+# Plantilla común de pull.sh (ver "Convención de pull.sh" en el README de zpanel).
 #
-# Optional, git-ignored `deploy.env` next to this file, e.g.:
+# Opcional, `deploy.env` (git-ignorado) junto a este archivo, p. ej.:
 #   RESTART_SERVICES="nightguardian-worker"
 #   PHP_BIN=/usr/bin/php8.3
-
+#
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
-cd "$ROOT"
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$APP_DIR"
 
-if [[ -f "$ROOT/deploy.env" ]]; then
+if [[ -f "$APP_DIR/deploy.env" ]]; then
     set -a
     # shellcheck disable=SC1091
-    source "$ROOT/deploy.env"
+    source "$APP_DIR/deploy.env"
     set +a
 fi
 
@@ -24,47 +23,59 @@ PHP_BIN="${PHP_BIN:-$(command -v php8.3 || command -v php)}"
 COMPOSER_BIN="$(command -v composer2 || command -v composer)"
 export COMPOSER_ALLOW_SUPERUSER=1
 
-artisan() { "$PHP_BIN" artisan "$@"; }
+artisan() {
+    runuser -u www-data -- "$PHP_BIN" artisan "$@"
+}
+
+# Git y Composer crean archivos como root: se devuelve todo el árbol (menos .git) a www-data.
+fix_permissions() {
+    find . -path ./.git -prune -o -exec chown -h www-data:www-data {} +
+}
+
+# El .env está completo cuando todas las claves necesarias para arrancar tienen valor.
+env_complete() {
+    local file="$APP_DIR/.env" key value
+    [[ -f "$file" ]] || return 1
+    for key in APP_KEY APP_URL DB_DATABASE DB_USERNAME; do
+        value="$(grep -E "^${key}=" "$file" | tail -n1 | cut -d= -f2- | tr -d "\"' " || true)"
+        [[ -n "$value" ]] || { echo "Falta ${key} en .env" >&2; return 1; }
+    done
+}
 
 APP_DOWN=0
 bring_up() {
     local code=$?
     if [[ $APP_DOWN -eq 1 ]]; then
-        artisan up || echo "WARNING: could not bring the app up, run: php artisan up" >&2
+        artisan up || echo "AVISO: no se pudo levantar el sitio, ejecutá: php artisan up" >&2
         APP_DOWN=0
     fi
     if [[ $code -ne 0 ]]; then
-        echo "Deploy failed (exit $code). The app was brought back up with whatever code is on disk." >&2
+        echo "!! Fallo en el deploy (exit $code). El sitio quedó en línea con el código que hay en disco." >&2
     fi
     exit "$code"
 }
 trap bring_up EXIT
 
-# .env is complete when every key needed to boot has a value.
-env_complete() {
-    local file="$ROOT/.env" key value
-    [[ -f "$file" ]] || return 1
-    for key in APP_KEY APP_URL DB_DATABASE DB_USERNAME; do
-        value="$(grep -E "^${key}=" "$file" | tail -n1 | cut -d= -f2- | tr -d "\"' " || true)"
-        [[ -n "$value" ]] || { echo "Missing ${key} in .env" >&2; return 1; }
-    done
-}
-
-echo "==> Maintenance mode"
-if [[ -f "$ROOT/vendor/autoload.php" && -f "$ROOT/.env" ]]; then
+# Primer deploy: todavía no hay vendor ni .env, así que no hay Artisan para activar mantenimiento.
+echo "==> Mantenimiento"
+if [[ -f "$APP_DIR/vendor/autoload.php" && -f "$APP_DIR/.env" ]]; then
     artisan down --retry=60 && APP_DOWN=1
 else
-    echo "    (first deploy: no vendor or .env yet, continuing without maintenance mode)"
+    echo "    (primer deploy: sin vendor ni .env, se sigue sin mantenimiento)"
 fi
 
-echo "==> git pull"
-git -c safe.directory="$ROOT" pull --ff-only
+# ── Git ────────────────────────────────────────────────────────────────────────
+echo "==> Git"
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+git -c safe.directory="$APP_DIR" fetch origin
+git -c safe.directory="$APP_DIR" reset --hard origin/"$BRANCH"
 
-echo "==> composer install"
-"$PHP_BIN" "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
+# ── Dependencias ───────────────────────────────────────────────────────────────
+echo "==> Composer"
+"$PHP_BIN" "$COMPOSER_BIN" install --no-dev --no-interaction --optimize-autoloader
 
-# Vite assets are optional here (the panel is Filament and has no @vite views), so a failed
-# front-end build is a warning, not a reason to abort the deploy.
+# Los assets de Vite son opcionales (el panel es Filament y no tiene vistas con @vite):
+# si el build falla es un aviso, no motivo para abortar el deploy.
 build_assets() {
     if [[ -f package-lock.json ]]; then
         npm ci && npm run build
@@ -74,36 +85,39 @@ build_assets() {
 }
 
 if [[ -f package.json ]] && grep -Eq '"build"[[:space:]]*:' package.json; then
-    echo "==> npm build"
+    echo "==> Frontend (Vite)"
     if ! build_assets; then
-        echo "WARNING: npm build failed, continuing without public/build" >&2
+        echo "AVISO: falló el build de npm, se sigue sin public/build" >&2
     fi
 else
-    echo "==> sin script build, se omite npm"
+    echo "==> Frontend (sin script build, se omite npm)"
 fi
 
-if [[ ! -f "$ROOT/.env" ]]; then
-    echo "Missing .env: copy .env.example, fill it in and run pull.sh again." >&2
+if [[ ! -f "$APP_DIR/.env" ]]; then
+    echo "Falta .env: copiá .env.example, completalo y ejecutá pull.sh de nuevo." >&2
     exit 1
 fi
 
-echo "==> migrate"
+# Artisan corre como www-data: se normaliza el dueño antes de usarlo.
+echo "==> Permisos"
+fix_permissions
+
+# ── Base de datos ──────────────────────────────────────────────────────────────
+echo "==> Migraciones"
 artisan migrate --force
 
-echo "==> filament:assets"
+# ── Cachés ─────────────────────────────────────────────────────────────────────
+echo "==> Cachés"
 artisan filament:assets
-
-echo "==> storage:link"
 artisan storage:link || true
-
 if env_complete; then
-    echo "==> optimize"
     artisan optimize
 else
-    echo "==> .env incomplete: skipping optimize" >&2
+    echo "AVISO: .env incompleto, se omite optimize" >&2
     artisan optimize:clear
 fi
 
+# ── Servicios ──────────────────────────────────────────────────────────────────
 if [[ -n "${RESTART_SERVICES:-}" ]]; then
     for service in ${RESTART_SERVICES//,/ }; do
         echo "==> systemctl restart ${service}"
@@ -111,5 +125,24 @@ if [[ -n "${RESTART_SERVICES:-}" ]]; then
     done
 fi
 
-chown -R www-data:www-data "$ROOT"
-echo "Deploy nightguardian OK"
+# Artisan puede haber creado archivos y subdirectorios como root.
+echo "==> Permisos finales"
+fix_permissions
+
+# ── En línea ───────────────────────────────────────────────────────────────────
+echo "==> Sitio en línea"
+if [[ $APP_DOWN -eq 1 ]]; then
+    artisan up
+    APP_DOWN=0
+fi
+trap - EXIT   # deploy exitoso: desactivar el trap de emergencia
+
+# ── OPcache ───────────────────────────────────────────────────────────────────
+# No se recarga PHP-FPM: el OPcache es compartido por todas las apps del servidor y un
+# reload lo vacía para todas. Con validate_timestamps=1 y revalidate_freq=15 PHP detecta
+# los cambios solo; la invalidación por app hace que el cambio se vea de inmediato.
+echo "==> OPcache (solo esta app)"
+if [ -x /root/opcache_invalidate_app.sh ]; then /root/opcache_invalidate_app.sh "$APP_DIR" || true; fi
+
+echo ""
+echo "✓  Deploy completado — rama: $BRANCH — $(date '+%Y-%m-%d %H:%M:%S')"
